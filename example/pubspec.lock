@@ -21,7 +21,7 @@ packages:
       name: characters
       url: "http://localhost:4000"
     source: hosted
-    version: "1.1.0"
+    version: "1.2.0"
   charcode:
     dependency: transitive
     description:
@@ -50,6 +50,13 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.2.1"
+  cupertino_icons:
+    dependency: "direct main"
+    description:
+      name: cupertino_icons
+      url: "http://localhost:4000"
+    source: hosted
+    version: "1.0.3"
   delta_e:
     dependency: transitive
     description:
@@ -76,15 +83,8 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.2.1"
-  flutter_lints:
-    dependency: "direct dev"
-    description:
-      name: flutter_lints
-      url: "http://localhost:4000"
-    source: hosted
-    version: "1.0.4"
   flutter_material_palette:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: flutter_material_palette
       url: "http://localhost:4000"
@@ -95,13 +95,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  lints:
-    dependency: transitive
-    description:
-      name: lints
-      url: "http://localhost:4000"
-    source: hosted
-    version: "1.0.1"
   matcher:
     dependency: transitive
     description:
@@ -110,12 +103,19 @@ packages:
     source: hosted
     version: "0.12.11"
   material_palette:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: material_palette
       url: "http://localhost:4000"
     source: hosted
     version: "0.2.3-preview.6"
+  material_you:
+    dependency: "direct main"
+    description:
+      name: material_you
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.0.2"
   meta:
     dependency: transitive
     description:
@@ -131,7 +131,7 @@ packages:
     source: hosted
     version: "1.0.1"
   palette_from_wallpaper:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: palette_from_wallpaper
       url: "http://localhost:4000"
@@ -157,7 +157,7 @@ packages:
       name: quiver
       url: "http://localhost:4000"
     source: hosted
-    version: "3.0.1+1"
+    version: "3.0.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -206,7 +206,7 @@ packages:
     source: hosted
     version: "0.4.3"
   tuple:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: tuple
       url: "http://localhost:4000"
@@ -220,12 +220,12 @@ packages:
     source: hosted
     version: "1.3.0"
   vector_math:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: vector_math
       url: "http://localhost:4000"
     source: hosted
-    version: "2.1.0"
+    version: "2.1.1"
 sdks:
-  dart: ">=2.13.0 <3.0.0"
+  dart: ">=2.14.0 <3.0.0"
   flutter: ">=1.20.0"

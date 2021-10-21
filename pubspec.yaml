@@ -1,19 +1,24 @@
-name: example
-description: The examples for the material_you package
-publish_to: 'none' 
+name: material_you
+description: An flutter package for implementing the Material You design language
+version: 0.0.2
+homepage:
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.17.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  material_you:
-  cupertino_icons: ^1.0.2
+  vector_math: any
+  tuple: ">=1.0.0 <3.0.0"
+  flutter_material_palette: ^0.2.3-preview.1
+  material_palette: ^0.2.3-preview.6
+  palette_from_wallpaper: ^0.1.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^1.0.0
 
 flutter:
-  uses-material-design: true
