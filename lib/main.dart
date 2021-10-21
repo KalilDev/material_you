@@ -1,51 +1,5 @@
-import 'dart:math';
-
-import 'package:flutter_material_palette/flutter_material_palette.dart';
-import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
-import 'color.dart';
-//import 'material.dart';
-import 'shapes.dart';
 import 'package:flutter/material.dart';
-
-ColorScheme colorSchemeFromPlatformPalette(
-    PlatformPalette? palette, bool isDark) {
-  final hasSec = palette?.secondaryColor != null,
-      hasTer = palette?.tertiaryColor != null;
-  final main =
-      MaterialColors.deriveFrom(palette?.primaryColor ?? Colors.deepPurple);
-  final primary = main.primary;
-  final secondary =
-      hasSec ? deriveMaterialColor(palette!.secondaryColor!) : main.triadicL;
-  final tertiary =
-      hasTer ? deriveMaterialColor(palette!.tertiaryColor!) : main.triadicR;
-  if (isDark)
-    return TertiaryColorScheme(
-      ColorScheme.dark(
-        primary: primary[kDesaturatedSwatch]!,
-        primaryVariant: primary[kVariantSwatch]!,
-        onPrimary: primary[kDesaturatedSwatch]!.textColor,
-        secondary: secondary[kDesaturatedSwatch]!,
-        secondaryVariant: secondary[kVariantSwatch]!,
-        onSecondary: secondary[kDesaturatedSwatch]!.textColor,
-      ),
-      tertiary: tertiary[kDesaturatedSwatch]!,
-      tertiaryVariant: tertiary[kVariantSwatch]!,
-      onTertiary: tertiary[kDesaturatedSwatch]!.textColor,
-    );
-  return TertiaryColorScheme(
-    ColorScheme.light(
-      primary: primary[kLightSwatch]!,
-      primaryVariant: primary[kVariantSwatch]!,
-      onPrimary: primary[kLightSwatch]!.textColor,
-      secondary: secondary[kLightSwatch]!,
-      secondaryVariant: secondary[kVariantSwatch]!,
-      onSecondary: secondary[kLightSwatch]!.textColor,
-    ),
-    tertiary: tertiary[kLightSwatch]!,
-    tertiaryVariant: tertiary[kVariantSwatch]!,
-    onTertiary: tertiary[kLightSwatch]!.textColor,
-  );
-}
+import 'package:material_you/material_you.dart';
 
 void main() => runPlatformThemedApp(
       MyApp(),
@@ -61,34 +15,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      themeMode: context.palette.colorHints != null
-          ? (context.palette.colorHints! &
-                      PlatformPalette.HINT_SUPPORTS_DARK_THEME ==
-                  PlatformPalette.HINT_SUPPORTS_DARK_THEME)
-              ? ThemeMode.dark
-              : null
-          : null,
-      theme: ThemeData.from(
-          colorScheme: colorSchemeFromPlatformPalette(
-        context.palette,
-        false,
-      )).copyWith(
-        //splashFactory: MaterialYouInkSplash.splashFactory,
-        highlightColor: Colors.transparent,
-        splashColor: Colors.black.withAlpha(40),
+    final themes = themesFrom(context.palette);
+    return InheritedMaterialYouColors(
+      colors: themes.materialYouColors,
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        themeMode: context.palette.colorHints != null
+            ? (context.palette.colorHints! &
+                        PlatformPalette.HINT_SUPPORTS_DARK_THEME ==
+                    PlatformPalette.HINT_SUPPORTS_DARK_THEME)
+                ? ThemeMode.dark
+                : null
+            : ThemeMode.dark,
+        theme: themes.lightTheme,
+        darkTheme: themes.darkTheme,
+        home: MyHomePage(title: 'Flutter Demo Home Page'),
       ),
-      darkTheme: ThemeData.from(
-          colorScheme: colorSchemeFromPlatformPalette(
-        context.palette,
-        true,
-      )).copyWith(
-        //splashFactory: MaterialYouInkSplash.splashFactory,
-        highlightColor: Colors.transparent,
-        splashColor: Colors.black.withAlpha(40),
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
@@ -105,17 +47,18 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   int _counter = 0;
   static final _borders = [
-    PillBorder.tiltedRight(),
-    DiamondBorder.all(radius: Radius.circular(80.0)),
+    WobblyBorder(vertices: 6),
+    WobblyBorder(vertices: 12),
+
+    //PillBorder.tiltedRight(),
+    //DiamondBorder.all(radius: Radius.circular(80.0)),
     RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
     WobblyBorder.square(),
     RoundedTriangleBorder(),
-    WobblyBorder(vertices: 6),
-    WobblyBorder(vertices: 12),
     WobblyBorder(),
     TearBorder(topLeft: Radius.circular(80.0))
   ];
-  ShapeBorder border = _borders[0];
+  OutlinedBorder border = _borders[0];
 
   void _incrementCounter() {
     setState(() {
@@ -133,9 +76,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           slivers: [
             SliverAppBar(
               title: Text("Material You"),
-              //backgroundColor: Theme.of(context).colorScheme.primary,
-              //foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              backwardsCompatibility: false,
             ),
             SliverList(
               delegate: SliverChildListDelegate(
@@ -145,9 +85,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     child: Material(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24.0)),
-                      color: Theme.of(context).colorScheme.secondary,
+                      color: context.materialYouColors.accent3.shade100,
                       child: Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(24),
                         child: Row(
                           children: [
                             Expanded(
@@ -170,23 +110,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               height: 86,
                               width: 86,
                               child: Material(
-                                shape: PillBorder.tiltedRight(),
-                                color: Color.alphaBlend(
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .tertiaryVariant
-                                      .textColor
-                                      .withOpacity(
-                                          Theme.of(context).brightness ==
-                                                      Brightness.dark ||
-                                                  kDesaturatedLightTheme
-                                              ? 0
-                                              : 0.35),
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .tertiary
-                                      .withOpacity(0.6),
-                                ),
+                                shape: MorphableBorder.toBorder(
+                                    WobblyBorder.triangle()),
+                                color:
+                                    context.materialYouColors.accent3.shade200,
                                 child: Center(
                                   child: Text(
                                     '$_counter',
@@ -194,9 +121,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                         .textTheme
                                         .headline4!
                                         .copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .tertiaryVariant,
+                                          color: context.materialYouColors
+                                              .accent3.shade900,
                                         ),
                                   ),
                                 ),
@@ -261,11 +187,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           aspectRatio: 1,
                           child: Material(
                             animationDuration: Duration(milliseconds: 500),
-                            shape: border,
+                            shape: MorphableBorder.toBorder(border),
                             color: Theme.of(context).colorScheme.primary,
                             child: InkWell(
                                 onTap: () => null,
-                                customBorder: border,
+                                customBorder: MorphableBorder.toBorder(border),
                                 highlightColor: Colors.transparent,
                                 splashColor: Colors.black.withAlpha(40),
                                 child: SizedBox.expand()),
@@ -297,6 +223,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
+        materialTapTargetSize: MaterialTapTargetSize.padded,
         icon: Icon(Icons.add),
         label: Text('Incrementar'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
