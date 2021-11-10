@@ -1,5 +1,9 @@
+import 'dart:developer';
+
+import 'package:example/color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:material_you/material_you.dart';
+import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 
 void main() => runPlatformThemedApp(
       MyApp(),
@@ -15,18 +19,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themes = themesFrom(context.palette);
-    return InheritedMaterialYouColors(
-      colors: themes.materialYouColors,
+    final themes = themesFromPlatform(context.palette);
+    return InheritedMonetTheme(
+      theme: themes.monetTheme,
       child: MaterialApp(
         title: 'Flutter Demo',
-        themeMode: context.palette.colorHints != null
-            ? (context.palette.colorHints! &
-                        PlatformPalette.HINT_SUPPORTS_DARK_THEME ==
-                    PlatformPalette.HINT_SUPPORTS_DARK_THEME)
-                ? ThemeMode.dark
-                : null
-            : ThemeMode.dark,
+        themeMode: ThemeMode.system,
         theme: themes.lightTheme,
         darkTheme: themes.darkTheme,
         home: MyHomePage(title: 'Flutter Demo Home Page'),
@@ -85,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     child: Material(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24.0)),
-                      color: context.materialYouColors.accent3.shade100,
+                      color: context.colorScheme.tertiary,
                       child: Padding(
                         padding: EdgeInsets.all(24),
                         child: Row(
@@ -97,10 +95,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                     .textTheme
                                     .headline5!
                                     .copyWith(
-                                        letterSpacing: 1.05,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSecondary),
+                                      letterSpacing: 1.05,
+                                      color: context.colorScheme.onTertiary,
+                                    ),
                               ),
                             ),
                             SizedBox(
@@ -112,8 +109,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               child: Material(
                                 shape: MorphableBorder.toBorder(
                                     WobblyBorder.triangle()),
-                                color:
-                                    context.materialYouColors.accent3.shade200,
+                                color: context.colorScheme.primaryContainer,
                                 child: Center(
                                   child: Text(
                                     '$_counter',
@@ -121,8 +117,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                         .textTheme
                                         .headline4!
                                         .copyWith(
-                                          color: context.materialYouColors
-                                              .accent3.shade900,
+                                          color: context
+                                              .colorScheme.onPrimaryContainer,
                                         ),
                                   ),
                                 ),
@@ -154,12 +150,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                 padding: EdgeInsets.all(4.0),
                                 child: Icon(
                                   Icons.person,
-                                  color:
-                                      Theme.of(context).colorScheme.onSecondary,
+                                  color: context.colorScheme.onSecondary,
                                 ),
                                 decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.secondary,
+                                    color: context.colorScheme.secondary,
                                     shape: BoxShape.circle),
                               ),
                             ),
@@ -188,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           child: Material(
                             animationDuration: Duration(milliseconds: 500),
                             shape: MorphableBorder.toBorder(border),
-                            color: Theme.of(context).colorScheme.primary,
+                            color: context.colorScheme.primary,
                             child: InkWell(
                                 onTap: () => null,
                                 customBorder: MorphableBorder.toBorder(border),
@@ -203,16 +197,37 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   Padding(
                     padding: EdgeInsets.all(16),
                     child: Ink(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: context.colorScheme.primary,
                         child: SizedBox(
                           height: 86,
                           child: InkWell(
-                            onTap: () => null,
+                            onTap: () => showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            ),
                             highlightColor: Colors.transparent,
                             splashColor: Colors.black.withAlpha(40),
                             child: SizedBox.expand(),
                           ),
                         )),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Ink(
+                      color: context.colorScheme.primary,
+                      child: SizedBox(
+                        height: 86,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      CurrentMonetThemePage())),
+                          highlightColor: Colors.transparent,
+                          splashColor: Colors.black.withAlpha(40),
+                          child: SizedBox.expand(),
+                        ),
+                      ),
+                    ),
                   )
                 ],
               ),
@@ -227,6 +242,39 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         icon: Icon(Icons.add),
         label: Text('Incrementar'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
+}
+
+class CurrentMonetThemePage extends StatelessWidget {
+  const CurrentMonetThemePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Themes'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Monet themes', style: context.theme.textTheme.headline3),
+              SizedBox(height: 16.0),
+              Text('Light theme', style: context.theme.textTheme.headline5),
+              SizedBox(height: 8.0),
+              MonetColorSchemeWidget(scheme: context.monetTheme.light),
+              SizedBox(height: 24.0),
+              Text('Dark theme', style: context.theme.textTheme.headline5),
+              SizedBox(height: 8.0),
+              MonetColorSchemeWidget(scheme: context.monetTheme.dark),
+              SizedBox(height: 24.0)
+            ],
+          ),
+        ),
       ),
     );
   }

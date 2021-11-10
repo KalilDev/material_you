@@ -56,7 +56,7 @@ packages:
       name: cupertino_icons
       url: "http://localhost:4000"
     source: hosted
-    version: "1.0.3"
+    version: "1.0.4"
   delta_e:
     dependency: transitive
     description:
@@ -90,11 +90,25 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "0.2.3-preview.1"
+  flutter_monet_theme:
+    dependency: transitive
+    description:
+      name: flutter_monet_theme
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
+  libmonet:
+    dependency: transitive
+    description:
+      name: libmonet
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.1"
   matcher:
     dependency: transitive
     description:
@@ -112,10 +126,10 @@ packages:
   material_you:
     dependency: "direct main"
     description:
-      name: material_you
-      url: "http://localhost:4000"
-    source: hosted
-    version: "0.0.2"
+      path: ".."
+      relative: true
+    source: path
+    version: "0.0.3"
   meta:
     dependency: transitive
     description:
@@ -123,6 +137,13 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.7.0"
+  monet_theme:
+    dependency: transitive
+    description:
+      name: monet_theme
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.0"
   num_utilities:
     dependency: transitive
     description:
@@ -136,7 +157,7 @@ packages:
       name: palette_from_wallpaper
       url: "http://localhost:4000"
     source: hosted
-    version: "0.1.4"
+    version: "0.1.5"
   path:
     dependency: transitive
     description:
@@ -157,7 +178,7 @@ packages:
       name: quiver
       url: "http://localhost:4000"
     source: hosted
-    version: "3.0.1"
+    version: "3.0.1+1"
   sky_engine:
     dependency: transitive
     description: flutter
