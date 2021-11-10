@@ -81,7 +81,7 @@ Themes themesFromPlatform(
 }) {
   final materialYou = materialYouColorsFromPalette(palette);
   MonetTheme monet;
-  if (palette.source == PaletteSource.platform) {
+  if (palette.source != PaletteSource.platform) {
     monet = monetThemeForFallbackPalette ?? monetThemeFromPalette(palette);
   } else {
     monet = monetThemeFromPalette(palette);
