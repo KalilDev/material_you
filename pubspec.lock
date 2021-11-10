@@ -21,7 +21,7 @@ packages:
       name: characters
       url: "http://localhost:4000"
     source: hosted
-    version: "1.1.0"
+    version: "1.2.0"
   charcode:
     dependency: transitive
     description:
@@ -90,11 +90,25 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "0.2.3-preview.1"
+  flutter_monet_theme:
+    dependency: "direct main"
+    description:
+      name: flutter_monet_theme
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
+  libmonet:
+    dependency: transitive
+    description:
+      name: libmonet
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.1"
   lints:
     dependency: transitive
     description:
@@ -123,6 +137,13 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.7.0"
+  monet_theme:
+    dependency: transitive
+    description:
+      name: monet_theme
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.0"
   num_utilities:
     dependency: transitive
     description:
@@ -136,7 +157,7 @@ packages:
       name: palette_from_wallpaper
       url: "http://localhost:4000"
     source: hosted
-    version: "0.1.4"
+    version: "0.1.5"
   path:
     dependency: transitive
     description:
@@ -225,7 +246,7 @@ packages:
       name: vector_math
       url: "http://localhost:4000"
     source: hosted
-    version: "2.1.0"
+    version: "2.1.1"
 sdks:
-  dart: ">=2.13.0 <3.0.0"
+  dart: ">=2.14.0 <3.0.0"
   flutter: ">=1.20.0"

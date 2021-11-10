@@ -3,15 +3,40 @@ import 'package:flutter_material_palette/flutter_material_palette.dart';
 import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
 import 'dart:math' as math;
 import 'material_you_splash.dart';
+import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 
-extension MaterialYouContextE on BuildContext {
+extension MonetContextE on BuildContext {
+  @Deprecated('use monetTheme instead!')
   MaterialYouColors get materialYouColors =>
       InheritedMaterialYouColors.of(this);
+
+  MonetTheme get monetTheme => InheritedMonetTheme.of(this);
+  MonetColorScheme get colorScheme =>
+      isDark ? monetTheme.dark : monetTheme.dark;
+  TextTheme get textTheme => theme.textTheme;
   ThemeData get theme => Theme.of(this);
-  ColorScheme get colorScheme => theme.colorScheme;
+  ColorScheme get colorSchemeFlt => theme.colorScheme;
   bool get isDark => theme.brightness == Brightness.dark;
 }
 
+class InheritedMonetTheme extends InheritedWidget {
+  final MonetTheme theme;
+
+  const InheritedMonetTheme({
+    Key? key,
+    required this.theme,
+    required Widget child,
+  }) : super(child: child, key: key);
+
+  @override
+  bool updateShouldNotify(InheritedMonetTheme oldWidget) =>
+      theme != oldWidget.theme;
+
+  static MonetTheme of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<InheritedMonetTheme>()!.theme;
+}
+
+@Deprecated('Use InheritedMonetTheme')
 class InheritedMaterialYouColors extends InheritedWidget {
   final MaterialYouColors colors;
 
@@ -34,85 +59,118 @@ class Themes {
   final ThemeData lightTheme;
   final ThemeData darkTheme;
   final MaterialYouColors materialYouColors;
+  final MonetTheme monetTheme;
 
-  Themes(this.lightTheme, this.darkTheme, this.materialYouColors);
+  Themes(
+    this.lightTheme,
+    this.darkTheme,
+    this.materialYouColors,
+    this.monetTheme,
+  );
 }
 
-Themes themesFrom(PlatformPalette palette) {
+@Deprecated('Use themesFromPlatform or themesFromMonet')
+Themes themesFrom(
+  PlatformPalette palette,
+) =>
+    themesFromPlatform(palette);
+Themes themesFromPlatform(
+  PlatformPalette palette, {
+  MonetTheme? monetThemeForFallbackPalette,
+  TextTheme? textTheme,
+}) {
   final materialYou = materialYouColorsFromPalette(palette);
+  MonetTheme monet;
+  if (palette.source == PaletteSource.platform) {
+    monet = monetThemeForFallbackPalette ?? monetThemeFromPalette(palette);
+  } else {
+    monet = monetThemeFromPalette(palette);
+  }
+  textTheme ??= generateTextTheme();
+
   return Themes(
-    _themeFrom(
-        materialYou, colorSchemeFromMaterialYouColors(materialYou, false)),
-    _themeFrom(
-        materialYou, colorSchemeFromMaterialYouColors(materialYou, true)),
+    _themeFrom(monet, textTheme, false),
+    _themeFrom(monet, textTheme, true),
     materialYou,
+    monet,
   );
 }
 
-ThemeData _themeFrom(MaterialYouColors materialYou, ColorScheme scheme) {
-  final brightness = scheme.brightness;
-  final isDark = brightness == Brightness.dark;
-  final paintedSurfaceBg = Color.alphaBlend(
-    (isDark ? materialYou.accent1.shade100 : materialYou.accent2.shade200)
-        .withOpacity(isDark ? 0.10 : 0.33),
-    scheme.background,
+Themes themesFromMonet(
+  MonetTheme monet, {
+  MaterialYouColors? materialYou,
+  TextTheme? textTheme,
+}) {
+  textTheme ??= generateTextTheme();
+  materialYou ??= MaterialYouColors.deriveFrom(monet.primary.getTone(40), null);
+  return Themes(
+    _themeFrom(monet, textTheme, false),
+    _themeFrom(monet, textTheme, true),
+    materialYou,
+    monet,
   );
-  final bottomNavBarBg = Color.alphaBlend(
-    (isDark ? materialYou.accent2.shade200 : materialYou.accent1.shade100)
-        .withOpacity(isDark ? 0.07 : 0.24),
-    scheme.background,
-  );
-  final fabBg = materialYou.accent2[isDark ? 700 : 100]!;
-  final paintedSurfaceFgColor =
-      isDark ? materialYou.accent2.shade100 : materialYou.accent2.shade900;
-  // TODO
-  final colorfulSurfaceBg =
-      isDark ? materialYou.accent1.shade300 : materialYou.accent1.shade700;
-  // TODO
-  final colorfulSurfaceFg = colorfulSurfaceBg.textColor;
-  return ThemeData.from(colorScheme: scheme).copyWith(
+}
+
+ThemeData _themeFrom(MonetTheme monet, TextTheme textTheme, bool isDark) {
+  final scheme = isDark ? monet.dark : monet.light;
+
+  return ThemeData.from(
+    colorScheme: scheme.toColorScheme(),
+    textTheme: textTheme,
+  ).copyWith(
     appBarTheme: AppBarTheme(
-      backgroundColor: paintedSurfaceBg,
-      foregroundColor: paintedSurfaceFgColor,
+      backgroundColor: scheme.surface,
+      foregroundColor: scheme.onSurface,
       elevation: 0,
     ),
     drawerTheme: DrawerThemeData(
       elevation: 0,
-      backgroundColor: paintedSurfaceBg,
+      backgroundColor: scheme.surface,
     ),
     splashFactory: MaterialYouInkSplash.splashFactory,
     highlightColor: Colors.transparent,
     scaffoldBackgroundColor: scheme.background,
     splashColor: Colors.black.withAlpha(40),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: fabBg,
-      foregroundColor: paintedSurfaceFgColor,
+      backgroundColor: scheme.primaryContainer,
+      foregroundColor: scheme.onPrimaryContainer,
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       elevation: 0,
-      selectedItemColor: paintedSurfaceFgColor,
+      selectedItemColor: scheme.surface,
     ),
     bottomAppBarTheme: BottomAppBarTheme(
-      color: bottomNavBarBg,
+      color: scheme.surface,
       elevation: 0.0,
     ),
     dialogTheme: DialogTheme(
-      backgroundColor: paintedSurfaceBg,
+      backgroundColor: scheme.surface,
       contentTextStyle: TextStyle(
-        color: paintedSurfaceFgColor,
+        color: scheme.onSurface,
+      ),
+      titleTextStyle: TextStyle(
+        color: scheme.onSurfaceVariant,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
       ),
     ),
+    // TODO
     popupMenuTheme: PopupMenuThemeData(
-      color: paintedSurfaceBg,
+      color: scheme.surfaceVariant,
+      textStyle: TextStyle(
+        color: scheme.onSurfaceVariant,
+      ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
       ),
     ),
     cardTheme: CardTheme(
+      color: scheme.surfaceVariant,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(12.0),
       ),
-      margin: EdgeInsets.all(12.0),
+      margin: EdgeInsets.all(4.0),
     ),
     tooltipTheme: null, // Didnt change!
     pageTransitionsTheme: const PageTransitionsTheme(builders: {
@@ -121,43 +179,71 @@ ThemeData _themeFrom(MaterialYouColors materialYou, ColorScheme scheme) {
       TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
     }),
     androidOverscrollIndicator: AndroidOverscrollIndicator.stretch,
-    iconTheme: IconThemeData(color: paintedSurfaceFgColor),
+    iconTheme: IconThemeData(
+      color: scheme.onBackground,
+    ),
     bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor:
-          isDark ? materialYou.accent1.shade300 : materialYou.accent1.shade700,
+      backgroundColor: scheme.surfaceVariant,
     ),
     bannerTheme: MaterialBannerThemeData(
-      backgroundColor: colorfulSurfaceBg,
-      contentTextStyle: TextStyle(color: colorfulSurfaceFg),
+      backgroundColor: scheme.primaryContainer,
+      contentTextStyle: TextStyle(color: scheme.onPrimaryContainer),
     ),
     textSelectionTheme: TextSelectionThemeData(
-      // TODO: this is an blend
-      cursorColor:
-          isDark ? materialYou.accent1.shade300 : materialYou.accent1.shade100,
+      cursorColor: scheme.primary,
     ),
     navigationRailTheme: NavigationRailThemeData(
-      backgroundColor: paintedSurfaceBg,
+      backgroundColor: scheme.surface,
       elevation: 0.0,
       selectedIconTheme: IconThemeData(
-        color: paintedSurfaceFgColor,
+        color: scheme.onSurface,
       ),
       selectedLabelTextStyle: TextStyle(
-        color: paintedSurfaceFgColor,
+        color: scheme.onSurface,
       ),
     ),
-    timePickerTheme: TimePickerThemeData(),
+    // TODO: dayPeriod and input decoration
+    timePickerTheme: TimePickerThemeData(
+      dialHandColor: scheme.primary,
+      dialBackgroundColor: scheme.surfaceVariant,
+      dialTextColor: scheme.onSurfaceVariant,
+      backgroundColor: scheme.surface,
+      entryModeIconColor: scheme.onSurface,
+      hourMinuteColor: scheme.primaryContainer,
+      hourMinuteTextColor: scheme.onPrimaryContainer,
+      dayPeriodColor: scheme.tertiary,
+      dayPeriodTextColor: scheme.onTertiary,
+      /*inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.primary,
+      ),*/
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24.0),
+      ),
+      // TODO: check if it is 16
+      hourMinuteShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      dayPeriodShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+    ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24.0),
       ),
+      backgroundColor: scheme.surfaceVariant,
+      contentTextStyle: TextStyle(
+        color: scheme.onSurfaceVariant,
+      ),
     ),
     chipTheme: ChipThemeData.fromDefaults(
-      secondaryColor: materialYou.accent1.shade100,
+      secondaryColor: scheme.secondary,
       labelStyle: TextStyle(
-        color: materialYou.accent1.shade100.textColor,
+        color: scheme.onSecondary,
       ),
-      brightness: materialYou.accent1.shade100.textColor == Colors.white
+      brightness: scheme.secondary.textColor == Colors.white
           ? Brightness.light
           : Brightness.dark,
     ),
@@ -199,6 +285,7 @@ extension on Color {
   List<int> get _rgbComponents => [red, green, blue];
 }
 
+@Deprecated('Use monetThemeFromPalette')
 MaterialYouColors materialYouColorsFromPalette(PlatformPalette palette) {
   final primaryHue = palette.primaryColor.hue;
   Color? maybeUse(Color? color) {
@@ -218,6 +305,12 @@ MaterialYouColors materialYouColorsFromPalette(PlatformPalette palette) {
   return MaterialYouColors.deriveFrom(palette.primaryColor, secondary);
 }
 
+MonetTheme monetThemeFromPalette(PlatformPalette palette) {
+  return generateTheme(
+    palette.primaryColor,
+  );
+}
+
 const kDesaturatedSwatch = 200;
 
 extension TextColorDerivation on Color {
@@ -230,34 +323,4 @@ extension TextColorDerivation on Color {
         ? Colors.black
         : Colors.white;
   }
-}
-
-ColorScheme colorSchemeFromMaterialYouColors(
-    MaterialYouColors colors, bool isDark) {
-  if (isDark) {
-    return ColorScheme.dark(
-      primary: colors.accent1[kDesaturatedSwatch]!,
-      primaryVariant: colors.accent2[kDesaturatedSwatch]!,
-      onPrimary: colors.accent1[kDesaturatedSwatch]!.textColor,
-      secondary: colors.accent3[kDesaturatedSwatch]!,
-      secondaryVariant: colors.accent3[kDesaturatedSwatch + 100]!,
-      onSecondary: colors.accent3[kDesaturatedSwatch]!.textColor,
-      background: colors.neutral1[900]!,
-      onBackground: colors.neutral1[900]!.textColor,
-      surface: colors.neutral2[900]!,
-      onSurface: colors.neutral2[900]!.textColor,
-    );
-  }
-  return ColorScheme.light(
-    primary: colors.accent1[kDesaturatedSwatch]!,
-    primaryVariant: colors.accent2[kDesaturatedSwatch]!,
-    onPrimary: colors.accent1[kDesaturatedSwatch]!.textColor,
-    secondary: colors.accent3[kDesaturatedSwatch]!,
-    secondaryVariant: colors.accent3[kDesaturatedSwatch + 100]!,
-    onSecondary: colors.accent3[kDesaturatedSwatch]!.textColor,
-    background: colors.neutral1[10]!,
-    onBackground: colors.neutral1[10]!.textColor,
-    surface: colors.neutral2[10]!,
-    onSurface: colors.neutral2[10]!.textColor,
-  );
 }
