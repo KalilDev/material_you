@@ -504,9 +504,9 @@ ThemeData _themeFrom(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24.0),
       ),
-      backgroundColor: scheme.surfaceVariant,
+      backgroundColor: scheme.inverseSurface,
       contentTextStyle: TextStyle(
-        color: scheme.onSurfaceVariant,
+        color: scheme.inverseOnSurface,
       ),
     ),
     chipTheme: ChipThemeData.fromDefaults(
