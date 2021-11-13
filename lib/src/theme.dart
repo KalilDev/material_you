@@ -350,6 +350,9 @@ ThemeData _themeFrom(
         MD3ElevationLevel.surfaceTint(scheme),
       ),
       foregroundColor: scheme.onSurface,
+      titleTextStyle: textTheme.titleLarge.copyWith(
+        color: scheme.onSurface,
+      ),
       elevation: 0,
     ),
     drawerTheme: DrawerThemeData(
@@ -378,7 +381,9 @@ ThemeData _themeFrom(
         MD3ElevationLevel.surfaceTint(scheme),
       ),
       indicatorColor: scheme.secondaryContainer,
+      labelTextStyle: MaterialStateProperty.all(textTheme.labelMedium),
     ),
+
     /* This component is not used in material3
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       elevation: 0,
@@ -396,10 +401,10 @@ ThemeData _themeFrom(
         scheme.surface,
         MD3ElevationLevel.surfaceTint(scheme),
       ),
-      contentTextStyle: TextStyle(
+      contentTextStyle: textTheme.bodyMedium.copyWith(
         color: scheme.onSurface,
       ),
-      titleTextStyle: TextStyle(
+      titleTextStyle: textTheme.headlineSmall.copyWith(
         color: scheme.onSurfaceVariant,
       ),
       shape: RoundedRectangleBorder(
@@ -429,7 +434,7 @@ ThemeData _themeFrom(
       ),
       margin: EdgeInsets.all(4.0),
     ),
-    tooltipTheme: null, // Didnt change!
+
     pageTransitionsTheme: const PageTransitionsTheme(builders: {
       TargetPlatform.android: ZoomPageTransitionsBuilder(),
       TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
