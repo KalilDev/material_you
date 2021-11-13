@@ -111,6 +111,22 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
     // The MediaQueryData.fromWindow has changed!
     setState(() {});
   }
+
+  ThemeData _resolveThemeFor(BuildContext context, ThemeData theme) {
+    final deviceType = context.deviceType;
+    final sizeClass = context.sizeClass;
+    var dialogAlignment = theme.dialogTheme.alignment ?? Alignment.center;
+    if (deviceType == MD3DeviceType.tablet) {
+      // Positioned to the right for an more ergonomic experience.
+      // https://m3.material.io/m3/pages/dialogs/guidelines/#9d723c7a-03d1-4e7c-95af-a20ed4b66533
+      dialogAlignment = AlignmentDirectional(ui.lerpDouble(-1, 1, 3 / 4)!, 0);
+    }
+    return theme.copyWith(
+        dialogTheme: theme.dialogTheme.copyWith(
+      alignment: dialogAlignment,
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = widget.mediaQueryData ??
@@ -171,8 +187,8 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
             child: Builder(
               builder: (context) => widget.builder(
                 context,
-                themes.lightTheme,
-                themes.darkTheme,
+                _resolveThemeFor(context, themes.lightTheme),
+                _resolveThemeFor(context, themes.darkTheme),
               ),
             ),
           ),
