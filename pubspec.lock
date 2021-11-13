@@ -96,19 +96,12 @@ packages:
       name: flutter_monet_theme
       url: "http://localhost:4000"
     source: hosted
-    version: "0.1.0"
+    version: "0.3.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
-  libmonet:
-    dependency: transitive
-    description:
-      name: libmonet
-      url: "http://localhost:4000"
-    source: hosted
-    version: "0.1.1"
   lints:
     dependency: transitive
     description:
@@ -123,6 +116,13 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "0.12.11"
+  material_color_utilities:
+    dependency: transitive
+    description:
+      name: material_color_utilities
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.1.1"
   material_palette:
     dependency: "direct main"
     description:
@@ -143,7 +143,7 @@ packages:
       name: monet_theme
       url: "http://localhost:4000"
     source: hosted
-    version: "0.1.0"
+    version: "0.3.0"
   num_utilities:
     dependency: transitive
     description:
