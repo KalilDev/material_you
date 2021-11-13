@@ -461,9 +461,12 @@ ThemeData _themeFrom(
     ),
 
     pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+      TargetPlatform.windows: ZoomPageTransitionsBuilder(),
       TargetPlatform.android: ZoomPageTransitionsBuilder(),
       TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
       TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
     }),
     androidOverscrollIndicator: AndroidOverscrollIndicator.stretch,
     iconTheme: IconThemeData(
