@@ -62,10 +62,6 @@ typedef MD3ThemedBuilder = Widget Function(
   BuildContext,
   ThemeData light,
   ThemeData dark,
-  // An opaque object which, when == to another themesIdentity, determines if
-  // the monet themes are equal. This is an temporary workaround while they
-  // don't override the equality operator.
-  Object themesIdentity,
 );
 
 class _SingleCache<K, V> {
@@ -80,7 +76,6 @@ class _SingleCache<K, V> {
   bool contains(K key) => this.key == key;
   V putIfAbsent(K key, V Function() ifAbsent) {
     if (key == this.key) {
-      print('Avoided rebuilding the themes. Hooray!');
       return value!;
     }
     final newValue = ifAbsent();
@@ -90,6 +85,39 @@ class _SingleCache<K, V> {
   }
 }
 
+// An opaque object which, when == to another [_TextThemeIdentity], determines
+// if the [MD3TextTheme]s are equal. This is an temporary workaround while it
+// doesn't override the equality operator.
+@immutable
+class _TextThemeIdentity {
+  // Used to resolve
+  final MD3DeviceType deviceType;
+  // Will be checked by identity.
+  final MD3TextAdaptativeTheme? userTextThemeOrNull;
+
+  const _TextThemeIdentity(this.deviceType, this.userTextThemeOrNull);
+  @override
+  int get hashCode => Object.hashAll([
+        deviceType,
+        identityHashCode(userTextThemeOrNull),
+      ]);
+
+  @override
+  bool operator ==(other) {
+    if (identical(other, this)) {
+      return true;
+    }
+    if (other is! _TextThemeIdentity) {
+      return false;
+    }
+    return other.deviceType == deviceType &&
+        identical(other.userTextThemeOrNull, userTextThemeOrNull);
+  }
+}
+
+// An opaque object which, when == to another themesIdentity, determines if
+// the monet themes are equal. This is an temporary workaround while they
+// don't override the equality operator.
 @immutable
 class _ThemesIdentity {
   // Used by the monet themes
@@ -146,22 +174,15 @@ class _ThemesIdentity {
 }
 
 class MD3Themes extends StatefulWidget {
-  MD3Themes({
+  const MD3Themes({
     Key? key,
     this.mediaQueryData,
     this.targetPlatform,
     this.monetThemeForFallbackPalette,
     this.textTheme,
     this.elevationTheme,
-    @Deprecated('Use themedBuilder')
-        Widget Function(BuildContext, ThemeData light, ThemeData dark)? builder,
-    MD3ThemedBuilder? themedBuilder,
-  })  : assert(
-            ((builder != null) ^ (themedBuilder != null)) && builder != null ||
-                themedBuilder != null,
-            'Provide one of themedBuilder or builder'),
-        builder = themedBuilder ?? ((a, b, c, _) => builder!(a, b, c)),
-        super(key: key);
+    required this.builder,
+  }) : super(key: key);
   final MediaQueryData? mediaQueryData;
   final TargetPlatform? targetPlatform;
   final MonetTheme? monetThemeForFallbackPalette;
@@ -179,15 +200,9 @@ class MD3Themes extends StatefulWidget {
   State<MD3Themes> createState() => _MD3ThemesState();
 }
 
-class _ExpensiveThemesToBeCached {
-  final Themes themes;
-  final MD3TextTheme resolvedTextTheme;
-
-  _ExpensiveThemesToBeCached(this.themes, this.resolvedTextTheme);
-}
-
 class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
-  final _cache = _SingleCache<_ThemesIdentity, _ExpensiveThemesToBeCached>();
+  final _cache = _SingleCache<_ThemesIdentity, Themes>();
+  final _textThemeCache = _SingleCache<_TextThemeIdentity, MD3TextTheme>();
   // Register as an WidgetsBindingObserver so we are notified of metrics
   // changes.
   @override
@@ -222,7 +237,6 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
     final targetPlatform = widget.targetPlatform ?? defaultTargetPlatform;
     final palette = context.palette;
     final elevationTheme = widget.elevationTheme ?? baselineMD3Elevation;
-    final textTheme = widget.textTheme ?? generateTextTheme();
 
     final MD3DeviceType deviceType;
     if (MD3Themes._kDesktopPlatforms.contains(targetPlatform)) {
@@ -269,31 +283,34 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
       userTextThemeOrNull: widget.textTheme,
     );
 
-    final expensiveThemes = _cache.putIfAbsent(identity, () {
-      final resolvedTextTheme = textTheme.resolveTo(deviceType);
-      var themes = themesFromPlatform(
+    final textThemeIdentity = _TextThemeIdentity(
+      deviceType,
+      widget.textTheme,
+    );
+    // Cache the text theme
+    final resolvedTextTheme = _textThemeCache.putIfAbsent(
+      textThemeIdentity,
+      () {
+        final textTheme = widget.textTheme ?? generateTextTheme();
+        return textTheme.resolveTo(deviceType);
+      },
+    );
+    // Cache the themes generated from the seed values
+    final themes = _cache.putIfAbsent(
+      identity,
+      () => themesFromPlatform(
         palette,
         monetThemeForFallbackPalette: widget.monetThemeForFallbackPalette,
         textTheme: resolvedTextTheme,
         elevationTheme: elevationTheme,
         textScaleFactor: textScaleFactor,
-      );
-      themes = Themes(
-        themes.lightTheme,
-        themes.darkTheme,
-        themes.materialYouColors,
-        themes.monetTheme,
-      );
-      return _ExpensiveThemesToBeCached(
-        themes,
-        resolvedTextTheme,
-      );
-    });
+      ),
+    );
 
     return _InheritedMD3TextTheme(
-      theme: expensiveThemes.resolvedTextTheme,
+      theme: resolvedTextTheme,
       child: InheritedMonetTheme(
-        theme: expensiveThemes.themes.monetTheme,
+        theme: themes.monetTheme,
         child: _InheritedMD3DeviceInfo(
           sizeClass: windowSizeClass,
           deviceType: deviceType,
@@ -302,9 +319,8 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
             child: Builder(
               builder: (context) => widget.builder(
                 context,
-                expensiveThemes.themes.lightTheme,
-                expensiveThemes.themes.darkTheme,
-                identity,
+                themes.lightTheme,
+                themes.darkTheme,
               ),
             ),
           ),
