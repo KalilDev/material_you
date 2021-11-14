@@ -58,22 +58,116 @@ extension MD3WindowSizeClassE on MD3WindowSizeClass {
   }
 }
 
+typedef MD3ThemedBuilder = Widget Function(
+  BuildContext,
+  ThemeData light,
+  ThemeData dark,
+  // An opaque object which, when == to another themesIdentity, determines if
+  // the monet themes are equal. This is an temporary workaround while they
+  // don't override the equality operator.
+  Object themesIdentity,
+);
+
+class _SingleCache<K, V> {
+  K? key;
+  V? value;
+  V? operator [](K key) => key == this.key ? value : null;
+  operator []=(K key, V value) {
+    this.key = key;
+    this.value = value;
+  }
+
+  bool contains(K key) => this.key == key;
+  V putIfAbsent(K key, V Function() ifAbsent) {
+    if (key == this.key) {
+      print('Avoided rebuilding the themes. Hooray!');
+      return value!;
+    }
+    final newValue = ifAbsent();
+    value = newValue;
+    this.key = key;
+    return newValue;
+  }
+}
+
+@immutable
+class _ThemesIdentity {
+  // Used by the monet themes
+  // When the platform returned an fallback and the user provided an fallback
+  // palette, this is null. Otherwise it is the seed.
+  final Color? seedOrNull;
+  // Used by text themes and for the dialog positioning
+  final MD3DeviceType deviceType;
+  // Used by button and the text themes.
+  final double textScaleFactor;
+  // When the platform returned an fallback and the user provided an fallback
+  // palette, this is not null. Otherwise it is null.
+  // Will be checked by identity.
+  final MonetTheme? fallbackThemeOrNull;
+  // Will be checked by identity.
+  final MD3ElevationTheme? userElevationThemeOrNull;
+  // Will be checked by identity.
+  final MD3TextAdaptativeTheme? userTextThemeOrNull;
+
+  const _ThemesIdentity({
+    required this.seedOrNull,
+    required this.deviceType,
+    required this.textScaleFactor,
+    required this.fallbackThemeOrNull,
+    required this.userElevationThemeOrNull,
+    required this.userTextThemeOrNull,
+  });
+
+  @override
+  int get hashCode => Object.hashAll([
+        seedOrNull,
+        deviceType,
+        textScaleFactor,
+        identityHashCode(fallbackThemeOrNull),
+        identityHashCode(userElevationThemeOrNull),
+        identityHashCode(userTextThemeOrNull),
+      ]);
+
+  @override
+  bool operator ==(other) {
+    if (identical(other, this)) {
+      return true;
+    }
+    if (other is! _ThemesIdentity) {
+      return false;
+    }
+    return other.seedOrNull == seedOrNull &&
+        other.deviceType == deviceType &&
+        textScaleFactor == other.textScaleFactor &&
+        identical(other.fallbackThemeOrNull, fallbackThemeOrNull) &&
+        identical(other.userElevationThemeOrNull, userElevationThemeOrNull) &&
+        identical(other.userTextThemeOrNull, userTextThemeOrNull);
+  }
+}
+
 class MD3Themes extends StatefulWidget {
-  const MD3Themes({
+  MD3Themes({
     Key? key,
     this.mediaQueryData,
     this.targetPlatform,
     this.monetThemeForFallbackPalette,
     this.textTheme,
     this.elevationTheme,
-    required this.builder,
-  }) : super(key: key);
+    @Deprecated('Use themedBuilder')
+        Widget Function(BuildContext, ThemeData light, ThemeData dark)? builder,
+    MD3ThemedBuilder? themedBuilder,
+  })  : assert(
+            ((builder != null) ^ (themedBuilder != null)) && builder != null ||
+                themedBuilder != null,
+            'Provide one of themedBuilder or builder'),
+        builder = themedBuilder ?? ((a, b, c, _) => builder!(a, b, c)),
+        super(key: key);
   final MediaQueryData? mediaQueryData;
   final TargetPlatform? targetPlatform;
   final MonetTheme? monetThemeForFallbackPalette;
   final MD3TextAdaptativeTheme? textTheme;
   final MD3ElevationTheme? elevationTheme;
-  final Widget Function(BuildContext, ThemeData light, ThemeData dark) builder;
+  final MD3ThemedBuilder builder;
 
   static const _kDesktopPlatforms = {
     TargetPlatform.windows,
@@ -85,7 +179,15 @@ class MD3Themes extends StatefulWidget {
   State<MD3Themes> createState() => _MD3ThemesState();
 }
 
+class _ExpensiveThemesToBeCached {
+  final Themes themes;
+  final MD3TextTheme resolvedTextTheme;
+
+  _ExpensiveThemesToBeCached(this.themes, this.resolvedTextTheme);
+}
+
 class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
+  final _cache = _SingleCache<_ThemesIdentity, _ExpensiveThemesToBeCached>();
   // Register as an WidgetsBindingObserver so we are notified of metrics
   // changes.
   @override
@@ -110,21 +212,6 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
   void didChangeTextScaleFactor() {
     // The MediaQueryData.fromWindow has changed!
     setState(() {});
-  }
-
-  ThemeData _resolveThemeFor(BuildContext context, ThemeData theme) {
-    final deviceType = context.deviceType;
-    final sizeClass = context.sizeClass;
-    var dialogAlignment = theme.dialogTheme.alignment ?? Alignment.center;
-    if (deviceType == MD3DeviceType.tablet) {
-      // Positioned to the right for an more ergonomic experience.
-      // https://m3.material.io/m3/pages/dialogs/guidelines/#9d723c7a-03d1-4e7c-95af-a20ed4b66533
-      dialogAlignment = AlignmentDirectional(ui.lerpDouble(-1, 1, 3 / 4)!, 0);
-    }
-    return theme.copyWith(
-        dialogTheme: theme.dialogTheme.copyWith(
-      alignment: dialogAlignment,
-    ));
   }
 
   @override
@@ -166,19 +253,47 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
     } else {
       windowSizeClass = MD3WindowSizeClass.expanded;
     }
-    final resolvedTextTheme = textTheme.resolveTo(deviceType);
 
-    final themes = themesFromPlatform(
-      palette,
-      monetThemeForFallbackPalette: widget.monetThemeForFallbackPalette,
-      textTheme: resolvedTextTheme,
-      elevationTheme: elevationTheme,
-      textScaleFactor: mediaQuery.textScaleFactor,
+    final willUseFallback = widget.monetThemeForFallbackPalette != null &&
+        context.palette.source != PaletteSource.platform;
+    final seed = context.palette.primaryColor;
+    final textScaleFactor = mediaQuery.textScaleFactor;
+
+    final identity = _ThemesIdentity(
+      seedOrNull: willUseFallback ? null : seed,
+      deviceType: deviceType,
+      textScaleFactor: textScaleFactor,
+      fallbackThemeOrNull:
+          willUseFallback ? widget.monetThemeForFallbackPalette : null,
+      userElevationThemeOrNull: widget.elevationTheme,
+      userTextThemeOrNull: widget.textTheme,
     );
+
+    final expensiveThemes = _cache.putIfAbsent(identity, () {
+      final resolvedTextTheme = textTheme.resolveTo(deviceType);
+      var themes = themesFromPlatform(
+        palette,
+        monetThemeForFallbackPalette: widget.monetThemeForFallbackPalette,
+        textTheme: resolvedTextTheme,
+        elevationTheme: elevationTheme,
+        textScaleFactor: textScaleFactor,
+      );
+      themes = Themes(
+        themes.lightTheme,
+        themes.darkTheme,
+        themes.materialYouColors,
+        themes.monetTheme,
+      );
+      return _ExpensiveThemesToBeCached(
+        themes,
+        resolvedTextTheme,
+      );
+    });
+
     return _InheritedMD3TextTheme(
-      theme: resolvedTextTheme,
+      theme: expensiveThemes.resolvedTextTheme,
       child: InheritedMonetTheme(
-        theme: themes.monetTheme,
+        theme: expensiveThemes.themes.monetTheme,
         child: _InheritedMD3DeviceInfo(
           sizeClass: windowSizeClass,
           deviceType: deviceType,
@@ -187,8 +302,9 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
             child: Builder(
               builder: (context) => widget.builder(
                 context,
-                _resolveThemeFor(context, themes.lightTheme),
-                _resolveThemeFor(context, themes.darkTheme),
+                expensiveThemes.themes.lightTheme,
+                expensiveThemes.themes.darkTheme,
+                identity,
               ),
             ),
           ),
@@ -315,6 +431,7 @@ Themes themesFromPlatform(
   MonetTheme? monetThemeForFallbackPalette,
   MD3ElevationTheme? elevationTheme,
   MD3TextTheme? textTheme,
+  MD3DeviceType deviceType = MD3DeviceType.mobile,
   double textScaleFactor = 1,
 }) {
   final materialYou = materialYouColorsFromPalette(palette);
@@ -326,11 +443,25 @@ Themes themesFromPlatform(
   } else {
     monet = monetThemeFromPalette(palette);
   }
-  textTheme ??= generateTextTheme().resolveTo(MD3DeviceType.mobile);
+  textTheme ??= generateTextTheme().resolveTo(deviceType);
 
   return Themes(
-    _themeFrom(monet, textTheme, elevationTheme, textScaleFactor, false),
-    _themeFrom(monet, textTheme, elevationTheme, textScaleFactor, true),
+    _themeFrom(
+      monet,
+      textTheme,
+      elevationTheme,
+      textScaleFactor,
+      deviceType,
+      false,
+    ),
+    _themeFrom(
+      monet,
+      textTheme,
+      elevationTheme,
+      textScaleFactor,
+      deviceType,
+      true,
+    ),
     materialYou,
     monet,
   );
@@ -341,14 +472,29 @@ Themes themesFromMonet(
   MaterialYouColors? materialYou,
   MD3ElevationTheme? elevationTheme,
   MD3TextTheme? textTheme,
+  MD3DeviceType deviceType = MD3DeviceType.mobile,
   double textScaleFactor = 1,
 }) {
-  textTheme ??= generateTextTheme().resolveTo(MD3DeviceType.mobile);
+  textTheme ??= generateTextTheme().resolveTo(deviceType);
   materialYou ??= MaterialYouColors.deriveFrom(monet.primary.getTone(40), null);
   elevationTheme ??= baselineMD3Elevation;
   return Themes(
-    _themeFrom(monet, textTheme, elevationTheme, textScaleFactor, false),
-    _themeFrom(monet, textTheme, elevationTheme, textScaleFactor, true),
+    _themeFrom(
+      monet,
+      textTheme,
+      elevationTheme,
+      textScaleFactor,
+      deviceType,
+      false,
+    ),
+    _themeFrom(
+      monet,
+      textTheme,
+      elevationTheme,
+      textScaleFactor,
+      deviceType,
+      true,
+    ),
     materialYou,
     monet,
   );
@@ -359,10 +505,17 @@ ThemeData _themeFrom(
   MD3TextTheme textTheme,
   MD3ElevationTheme elevationTheme,
   double textScaleFactor,
+  MD3DeviceType deviceType,
   bool isDark,
 ) {
   final scheme = isDark ? monet.dark : monet.light;
 
+  AlignmentGeometry? dialogAlignment;
+  if (deviceType == MD3DeviceType.tablet) {
+    // Positioned to the right for an more ergonomic experience.
+    // https://m3.material.io/m3/pages/dialogs/guidelines/#9d723c7a-03d1-4e7c-95af-a20ed4b66533
+    dialogAlignment = AlignmentDirectional(ui.lerpDouble(-1, 1, 3 / 4)!, 0);
+  }
   return ThemeData.from(
     colorScheme: scheme.toColorScheme(),
     textTheme: textTheme.toTextTheme(),
@@ -435,6 +588,7 @@ ThemeData _themeFrom(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
+      alignment: dialogAlignment,
     ),
     // TODO
     popupMenuTheme: PopupMenuThemeData(

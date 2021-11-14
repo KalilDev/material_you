@@ -1,6 +1,6 @@
 name: material_you
 description: An flutter package for implementing the Material You design language
-version: 0.0.13
+version: 0.0.14
 homepage:
 
 environment:
@@ -15,7 +15,7 @@ dependencies:
   flutter_material_palette: ^0.2.3-preview.1
   material_palette: ^0.2.3-preview.6
   palette_from_wallpaper: ^0.1.5
-  flutter_monet_theme: ^0.3.0
+  flutter_monet_theme: ^0.3.1
 
 dev_dependencies:
   flutter_test:
