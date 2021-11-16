@@ -225,7 +225,7 @@ packages:
       name: test_api
       url: "http://localhost:4000"
     source: hosted
-    version: "0.4.3"
+    version: "0.4.7"
   tuple:
     dependency: "direct main"
     description:

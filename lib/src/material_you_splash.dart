@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
@@ -95,7 +97,8 @@ class _SplashParameters {}
 ///    [Material].
 ///  * [Ink], a convenience widget for drawing images and other decorations on
 ///    Material widgets.
-class MaterialYouInkSplash extends InteractiveInkFeature {
+class MaterialYouInkSplash extends InteractiveInkFeature
+    with RenderObjectInkFeature<_MaterialYouSplashRenderObject> {
   /// Begin a splash, centered at position relative to [referenceBox].
   ///
   /// The [controller] argument is typically obtained via
@@ -146,17 +149,22 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
             ((_kInnerCircleRadius * 2) / _kUnconfirmedSplashDuration).floor());*/
     _innerCircleController =
         AnimationController(duration: _tick, vsync: controller.vsync)
-          ..addListener(controller.markNeedsPaint)
-          ..addStatusListener(_onInnerCircleTick)
-          ..repeat(reverse: true);
+          ..addStatusListener(_onInnerCircleTick);
     _alphaController = AnimationController(
         duration: _kSplashFadeDuration, vsync: controller.vsync)
-      ..addListener(controller.markNeedsPaint)
       ..addStatusListener(_handleAlphaStatusChanged);
     _alpha = _alphaController!.drive(IntTween(
       begin: color.alpha,
       end: 0,
     ));
+
+    // Add the listeners later and start repeat because the renderObject needs
+    // to be created first, and it depends on _alpha, therefore we need to call
+    // this after creating _alpha
+    _alphaController!.addListener(markNeedsPaint);
+    _innerCircleController!
+      ..addListener(markNeedsPaint)
+      ..repeat(reverse: true);
 
     controller.addInkFeature(this);
   }
@@ -174,6 +182,11 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
   late Animation<int> _alpha;
   AnimationController? _alphaController;
   AnimationController? _innerCircleController;
+
+  void markNeedsPaint() {
+    updateRenderObject();
+    controller.markNeedsPaint();
+  }
 
   /// Used to specify this type of ink splash for an [InkWell], [InkResponse],
   /// material [Theme], or [ButtonStyle].
@@ -227,13 +240,6 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
   }
 
   static const _kBorderWidth = 70.0;
-  static double _kSigmaForContainer(Size size) {
-    final diagonalSquared = size.height * size.height + size.width * size.width;
-    final logPart = math.log(diagonalSquared);
-    const inverseK = 5.0;
-    final inversePart = (1 / diagonalSquared) * inverseK;
-    return logPart - inversePart;
-  }
 
   static double _kInnerCircleSizeForContainer(Size size) {
     final diagonalSquared = size.height * size.height + size.width * size.width;
@@ -242,8 +248,6 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
     const inverseK = 50000.0;
     final inversePart = (1 / diagonalSquared) * inverseK;
     final result = (logPart - inversePart).clamp(1.0, 24.0);
-
-    print([logPart, inversePart, result]);
     return result;
   }
 
@@ -258,7 +262,6 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
   late final shape = _getShape();
   final kOverglowWidth = 4.0;
   final kInnerCircleRadius = 18.0;
-  final kInnerCircleStrokeWidth = 1.0;
   final kRippleStrokeWidth = 2.0;
 
   final _innerColor = Colors.black;
@@ -271,7 +274,7 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
     final animController = AnimationController(
       vsync: controller.vsync,
       duration: _kUnconfirmedSplashDuration,
-    )..addListener(controller.markNeedsPaint);
+    );
     if (_rippleI > 3) {
       return;
     }
@@ -289,6 +292,7 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
       ..forward();
 
     _rippleControllers.add(rippleController);
+    markNeedsPaint();
   }
 
   void _onInnerCircleTick(AnimationStatus status) {
@@ -308,208 +312,30 @@ class MaterialYouInkSplash extends InteractiveInkFeature {
           ))
       .toList();
 
-  void paintBlurred(Canvas canvas, Matrix4 transform) {
-    final size = referenceBox.size;
-    final center = _position ?? size.center(Offset.zero);
-    canvas.save();
-    canvas.transform(transform.storage);
-    _RipplePainter.paintRipples(
-      canvas,
-      size,
-      center: center,
-      shape: shape,
-      ripples: _ripples,
-      strokeWidth: kRippleStrokeWidth,
-    );
-    _RipplePainter.paintInnerCircle(
-      canvas,
-      size,
-      color: _innerColor.withAlpha(_alpha.value),
-      strokeWidth: kInnerCircleStrokeWidth,
-      radius: _innerCircleController!.value * kInnerCircleRadius,
-      center: center,
-    );
-    canvas.restore();
-  }
-
-  ImageFilterLayer? _blurLayer;
-  ClipPathLayer? _clipLayer;
   @override
-  void paint(PaintingContext context, Offset offset) {
-    final transform = getTransformToReferenceBox();
-    final sigma = _kSigmaForContainer(referenceBox.size);
-    _blurLayer = ImageFilterLayer(
-        imageFilter: ui.ImageFilter.blur(
-      sigmaX: sigma,
-      sigmaY: sigma,
-    ));
-    _clipLayer = ClipPathLayer(
-      clipPath: shape.getInnerPath(offset & referenceBox.size),
-    );
+  _MaterialYouSplashRenderObject createRenderObject() =>
+      _MaterialYouSplashRenderObject(
+        shape,
+        _position ?? referenceBox.size.center(Offset.zero),
+        (_innerCircleController?.value ?? 0.0) * _kInnerCircleRadius,
+        _ripples,
+        _innerColor.withAlpha(_alpha.value),
+        transformToReferenceBox,
+        referenceBox.size,
+      );
 
-    context.pushLayer(
-        _clipLayer!,
-        (context, offset) => context.pushLayer(
-              _blurLayer!,
-              (context, offset) => paintBlurred(
-                context.canvas,
-                transform..translate(offset.dx, offset.dy),
-              ),
-              offset,
-            ),
-        offset);
-  }
-}
-
-class _Ripples extends StatefulWidget {
-  final Offset position;
-  final RenderBox referenceBox;
-  final ShapeBorder shape;
-  final double targetRadius;
-
-  const _Ripples({
-    Key? key,
-    required this.position,
-    required this.referenceBox,
-    required this.shape,
-    required this.targetRadius,
-  }) : super(key: key);
-  @override
-  __RipplesState createState() => __RipplesState();
-}
-
-class __RipplesState extends State<_Ripples> with TickerProviderStateMixin {
-  final _kTick = Duration(milliseconds: 200);
-  final kOverglowWidth = 4.0;
-  final kInnerCircleRadius = 18.0;
-  final kInnerCircleStrokeWidth = 1.0;
-  final kRippleStrokeWidth = 2.0;
-
-  late final heartbeat = AnimationController(
-    vsync: this,
-    duration: _kTick,
-  )..addStatusListener(_heartbeatStatusListener);
-  Set<_RippleController> rippleControllers = {};
-  int _animationI = 0;
-  void _heartbeatStatusListener(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      animationStep(++_animationI);
-      heartbeat.forward(from: 0);
+  void updateRenderObject() {
+    if (renderObject == null) {
+      return;
     }
-  }
-
-  late final overglowController =
-      AnimationController(vsync: this, duration: _kTick);
-  late final Animation<double> overglow =
-      CurveTween(curve: Curves.linear).animate(overglowController);
-  late final AnimationController innerCircleController =
-      AnimationController(vsync: this, duration: _kTick * 2);
-  late final Animation<Color?> innerCircleColor =
-      innerCircleColorTween.animate(innerCircleColorController);
-  late final AnimationController innerCircleColorController =
-      AnimationController(vsync: this, duration: _kTick * 2 * 4);
-  late final Animation<double> innerCircle =
-      innerCircleTween.animate(innerCircleController);
-  static final innerCircleColorTween = ColorTween(
-    begin: Color(0xFFFFFFFF),
-    end: Color(0x00FFFFFF),
-  );
-  static final innerCircleTween = TweenSequence<double>([
-    TweenSequenceItem(tween: Tween(begin: 0, end: 1), weight: 1 / 2),
-    TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 1 / 2),
-  ]);
-
-  void initAnimation() {
-    innerCircleController.repeat();
-    innerCircleColorController.forward();
-    _addNewRipple();
-  }
-
-  double get radialVelocityPerTick => kInnerCircleRadius;
-  Duration get rippleDuration =>
-      _kTick * (_rippleRadius / radialVelocityPerTick);
-  final kRippleRadiusFactor = 1.3;
-  double get _rippleRadius => widget.targetRadius * kRippleRadiusFactor;
-  int _rippleI = 0;
-  void _addNewRipple() {
-    final controller = AnimationController(
-      vsync: this,
-      duration: rippleDuration,
-    );
-    final rippleController = _RippleController(controller, _rippleI++);
-
-    void disposeRipple(AnimationStatus status) {
-      if (status == AnimationStatus.completed) {
-        controller.dispose();
-        rippleControllers.remove(rippleController);
-        //paintOverglow = true;
-      }
-    }
-
-    controller
-      ..addStatusListener(disposeRipple)
-      ..forward();
-
-    rippleControllers.add(rippleController);
-  }
-
-  void animationStep(int i) {
-    if (i.isEven) {
-      _addNewRipple();
-    }
-    if (i == 1) {
-      overglowController.forward();
-      //controllers.add(controller);
-    }
-  }
-
-  void initState() {
-    //animationStep(0);
-    heartbeat.forward();
-    initAnimation();
-    super.initState();
-  }
-
-  void dispose() {
-    heartbeat.dispose();
-    overglowController.dispose();
-    innerCircleController.dispose();
-    innerCircleColorController.dispose();
-    rippleControllers.forEach((e) => e.controller.dispose());
-    super.dispose();
-  }
-
-  bool paintOverglow = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox();
-    /*
-    return AnimatedBuilder(
-      animation: heartbeat,
-      builder: (_, __) => CustomPaint(
-        painter: _RipplePainter(
-          paintOverglow ? kOverglowWidth : 0, //overglow.value * kOverglowWidth,
-          widget.shape,
-          kInnerCircleRadius,
-          innerCircle.value,
-          kInnerCircleStrokeWidth,
-          innerCircleColor.value!,
-          widget.position,
-          rippleControllers
-              //.map(rippleCurve.transform)
-              .map((e) => _Ripple(
-                    e.value,
-                    e.value * _rippleRadius,
-                    e.value * kRippleRadiusFactor,
-                    e.color,
-                  ))
-              .toList(),
-          kRippleStrokeWidth,
-        ),
-        child: SizedBox.expand(),
-      ),
-    );*/
+    renderObject!
+      .._shape = shape
+      .._position = _position ?? referenceBox.size.center(Offset.zero)
+      .._radius = _innerCircleController!.value * _kInnerCircleRadius
+      .._ripples = _ripples
+      .._innerColor = _innerColor.withAlpha(_alpha.value)
+      .._transformToReferenceBox = transformToReferenceBox
+      .._referenceBoxSize = referenceBox.size;
   }
 }
 
@@ -707,4 +533,178 @@ abstract class _RipplePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _MaterialYouSplashRenderObject extends RenderBox {
+  _MaterialYouSplashRenderObject(
+      this._shape,
+      this._position,
+      this._radius,
+      this._ripples,
+      this._innerColor,
+      this._transformToReferenceBox,
+      this._referenceBoxSize);
+
+  ShapeBorder _shape;
+
+  ShapeBorder get shape => _shape;
+
+  set shape(ShapeBorder shape) {
+    if (_shape == shape) {
+      return;
+    }
+    _shape = shape;
+    markNeedsPaint();
+  }
+
+  Offset _position;
+
+  Offset get position => _position;
+
+  set position(Offset position) {
+    if (_position == position) {
+      return;
+    }
+    _position = position;
+    markNeedsPaint();
+  }
+
+  double _radius;
+
+  double get radius => _radius;
+
+  set radius(double radius) {
+    if (_radius == radius) {
+      return;
+    }
+    _radius = radius;
+    markNeedsPaint();
+  }
+
+  Color _innerColor;
+
+  Color get innerColor => _innerColor;
+
+  set innerColor(Color innerColor) {
+    if (_innerColor == innerColor) {
+      return;
+    }
+    _innerColor = innerColor;
+    markNeedsPaint();
+  }
+
+  Matrix4 _transformToReferenceBox;
+
+  Matrix4 get transformToReferenceBox => _transformToReferenceBox;
+
+  set transformToReferenceBox(Matrix4 transformToReferenceBox) {
+    if (_transformToReferenceBox == transformToReferenceBox) {
+      return;
+    }
+    _transformToReferenceBox = transformToReferenceBox;
+    markNeedsPaint();
+  }
+
+  Size _referenceBoxSize;
+
+  Size get referenceBoxSize => _referenceBoxSize;
+
+  set referenceBoxSize(Size referenceBoxSize) {
+    if (_referenceBoxSize == referenceBoxSize) {
+      return;
+    }
+    _referenceBoxSize = referenceBoxSize;
+    markNeedsPaint();
+  }
+
+  List<_Ripple> _ripples;
+
+  List<_Ripple> get ripples => _ripples;
+
+  set ripples(List<_Ripple> ripples) {
+    _ripples = ripples;
+    markNeedsPaint();
+  }
+
+  ImageFilterLayer? _blurLayer;
+  ClipPathLayer? _clipLayer;
+
+  @override
+  bool get sizedByParent => true;
+  final kInnerCircleRadius = 18.0;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    return constraints.biggest;
+  }
+
+  final kRippleStrokeWidth = 2.0;
+  final kInnerCircleStrokeWidth = 1.0;
+
+  void paintBlurred(Canvas canvas, Matrix4 transform) {
+    final size = this.referenceBoxSize;
+    final center = _position;
+    canvas.save();
+
+    canvas.transform(transform.storage);
+    _RipplePainter.paintRipples(
+      canvas,
+      size,
+      center: center,
+      shape: shape,
+      ripples: _ripples,
+      strokeWidth: kRippleStrokeWidth,
+    );
+    _RipplePainter.paintInnerCircle(
+      canvas,
+      size,
+      color: innerColor,
+      strokeWidth: kInnerCircleStrokeWidth,
+      radius: radius,
+      center: center,
+    );
+    canvas.restore();
+  }
+
+  static double _kSigmaForContainer(Size size) {
+    final diagonalSquared = size.height * size.height + size.width * size.width;
+    final logPart = math.log(diagonalSquared);
+    const inverseK = 5.0;
+    final inversePart = (1 / diagonalSquared) * inverseK;
+
+    return logPart - inversePart;
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => true;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final transform = Matrix4.identity()
+      ..translate(offset.dx, offset.dy)
+      ..multiply(_transformToReferenceBox);
+    final sigma = _kSigmaForContainer(size);
+    _blurLayer = ImageFilterLayer(
+      imageFilter: ui.ImageFilter.blur(
+        sigmaX: sigma,
+        sigmaY: sigma,
+      ),
+    );
+    _clipLayer = ClipPathLayer(
+      clipPath: shape
+          .getInnerPath(offset & referenceBoxSize)
+          .transform(_transformToReferenceBox.storage),
+    );
+
+    context.pushLayer(_clipLayer!, (context, offset) {
+      context.pushLayer(
+        _blurLayer!,
+        (context, offset) => paintBlurred(
+          context.canvas,
+          transform,
+        ),
+        offset,
+      );
+    }, offset);
+  }
 }
