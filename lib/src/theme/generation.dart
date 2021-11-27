@@ -468,8 +468,7 @@ class _DefaultElevatedButtonBackgroundColor
     if (states.contains(MaterialState.disabled)) {
       level = elevation.level0;
       color = color.withOpacity(0.12);
-    }
-    if (states.contains(MaterialState.hovered)) {
+    } else if (states.contains(MaterialState.hovered)) {
       level = elevation.level2;
     }
     return level.overlaidColor(color, tint);
