@@ -68,15 +68,15 @@ class MD3ElevationTintableColor extends MaterialStateColor {
   ) : super(color.value);
 
   final Color color;
-  final Color tintColor;
-  final MaterialStateProperty<MD3ElevationLevel> elevation;
+  final Color? tintColor;
+  final MaterialStateProperty<MD3ElevationLevel>? elevation;
 
   @override
   Color resolve(Set<MaterialState> states) {
-    if (tintColor != null) {
-      return elevation.resolve(states).overlaidColor(
+    if (tintColor != null && elevation != null) {
+      return elevation!.resolve(states).overlaidColor(
             MaterialStateProperty.resolveAs(color, states),
-            MaterialStateProperty.resolveAs(tintColor, states),
+            MaterialStateProperty.resolveAs(tintColor!, states),
           );
     }
     return MaterialStateProperty.resolveAs(color, states);
