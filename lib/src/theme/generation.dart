@@ -113,6 +113,8 @@ ThemeData _themeFrom(
   AlignmentGeometry? dialogAlignment;
   if (deviceType == MD3DeviceType.tablet) {
     // Positioned to the right for an more ergonomic experience.
+    // This is only an aproximation! An proper MD3 dialog layout is required for
+    // the spec behavior.
     // https://m3.material.io/m3/pages/dialogs/guidelines/#9d723c7a-03d1-4e7c-95af-a20ed4b66533
     dialogAlignment = AlignmentDirectional(ui.lerpDouble(-1, 1, 3 / 4)!, 0);
   }
@@ -161,12 +163,6 @@ ThemeData _themeFrom(
       indicatorColor: scheme.secondaryContainer,
       labelTextStyle: MaterialStateProperty.all(textTheme.labelMedium),
     ),
-
-    /* This component is not used in material3
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      elevation: 0,
-      selectedItemColor: scheme.surface,
-    ),*/
     bottomAppBarTheme: BottomAppBarTheme(
       color: elevationTheme.level0.overlaidColor(
         scheme.surface,
