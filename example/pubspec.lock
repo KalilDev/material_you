@@ -43,13 +43,6 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.15.0"
-  color_models:
-    dependency: transitive
-    description:
-      name: color_models
-      url: "http://localhost:4000"
-    source: hosted
-    version: "1.2.1"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -57,13 +50,6 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.0.4"
-  delta_e:
-    dependency: transitive
-    description:
-      name: delta_e
-      url: "http://localhost:4000"
-    source: hosted
-    version: "0.2.0"
   fake_async:
     dependency: transitive
     description:
@@ -76,27 +62,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_color_models:
-    dependency: transitive
-    description:
-      name: flutter_color_models
-      url: "http://localhost:4000"
-    source: hosted
-    version: "1.2.1"
-  flutter_material_palette:
-    dependency: transitive
-    description:
-      name: flutter_material_palette
-      url: "http://localhost:4000"
-    source: hosted
-    version: "0.2.3-preview.1"
   flutter_monet_theme:
     dependency: transitive
     description:
       name: flutter_monet_theme
       url: "http://localhost:4000"
     source: hosted
-    version: "0.3.0"
+    version: "0.3.5"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -116,20 +88,13 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "0.1.1"
-  material_palette:
-    dependency: transitive
-    description:
-      name: material_palette
-      url: "http://localhost:4000"
-    source: hosted
-    version: "0.2.3-preview.6"
   material_you:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.0.13"
+    version: "0.0.21"
   meta:
     dependency: transitive
     description:
@@ -144,13 +109,6 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "0.3.0"
-  num_utilities:
-    dependency: transitive
-    description:
-      name: num_utilities
-      url: "http://localhost:4000"
-    source: hosted
-    version: "1.0.1"
   palette_from_wallpaper:
     dependency: transitive
     description:
@@ -165,13 +123,6 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.8.0"
-  powers:
-    dependency: transitive
-    description:
-      name: powers
-      url: "http://localhost:4000"
-    source: hosted
-    version: "1.0.0+2"
   quiver:
     dependency: transitive
     description:
@@ -225,7 +176,7 @@ packages:
       name: test_api
       url: "http://localhost:4000"
     source: hosted
-    version: "0.4.3"
+    version: "0.4.7"
   tuple:
     dependency: transitive
     description:

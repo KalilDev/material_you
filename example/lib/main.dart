@@ -1,9 +1,50 @@
-import 'dart:developer';
-
 import 'package:example/color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:material_you/material_you.dart';
-import 'package:flutter_monet_theme/flutter_monet_theme.dart';
+import 'package:material_color_utilities/material_color_utilities.dart';
+
+class RainbowSeedBuilder extends StatefulWidget {
+  const RainbowSeedBuilder({
+    Key? key,
+    this.degreesPerSecond = 60,
+    this.chroma = 48,
+    required this.builder,
+  }) : super(key: key);
+  final double degreesPerSecond;
+  final double chroma;
+  final Widget Function(BuildContext context, Color) builder;
+
+  @override
+  _RainbowSeedBuilderState createState() => _RainbowSeedBuilderState();
+}
+
+class _RainbowSeedBuilderState extends State<RainbowSeedBuilder>
+    with SingleTickerProviderStateMixin {
+  late final Stream<int> stream =
+      Stream.periodic(kThemeAnimationDuration, (i) => i + 1);
+
+  double get degreesPerTick =>
+      widget.degreesPerSecond /
+      (Duration(seconds: 1).inMilliseconds /
+          kThemeChangeDuration.inMilliseconds);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<int>(
+      stream: stream,
+      initialData: 0,
+      builder: (context, snapshot) {
+        final hct = HctColor.from(
+          degreesPerTick * snapshot.data!,
+          widget.chroma,
+          40,
+        );
+        final color = Color(hct.toInt());
+        return widget.builder(context, color);
+      },
+    );
+  }
+}
 
 void main() => runPlatformThemedApp(
       MyApp(),
@@ -19,15 +60,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themes = themesFromPlatform(context.palette);
-    return InheritedMonetTheme(
-      theme: themes.monetTheme,
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        themeMode: ThemeMode.system,
-        theme: themes.lightTheme,
-        darkTheme: themes.darkTheme,
-        home: MyHomePage(title: 'Flutter Demo Home Page'),
+    final themeMode = ThemeMode.system;
+    return RainbowSeedBuilder(
+      builder: (context, seed) => MD3Themes(
+        seed: seed,
+        //monetThemeForFallbackPalette: baseline_3p,
+        builder: (context, lightTheme, darkTheme) => MaterialApp(
+          title: 'Flutter Demo',
+          themeMode: themeMode,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          builder: (context, home) => AnimatedMonetColorScheme(
+            themeMode: themeMode,
+            child: home!,
+          ),
+          home: MyHomePage(title: 'Flutter Demo Home Page'),
+        ),
       ),
     );
   }
@@ -65,9 +113,26 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
+  bool _switch = false;
+  void _onSwitch(bool v) => setState(() => _switch = v);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: NavigationBar(destinations: [
+        NavigationDestination(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.home),
+          label: 'Home1',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.home),
+          label: 'Home2',
+        ),
+      ]),
       body: Center(
         child: Material(
             child: CustomScrollView(
