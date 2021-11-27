@@ -205,7 +205,7 @@ ThemeData _themeFrom(
     ),
     cardTheme: CardTheme(
       color: elevationTheme.level0.overlaidColor(
-        scheme.surfaceVariant,
+        scheme.surface,
         MD3ElevationLevel.surfaceTint(scheme),
       ),
       shape: RoundedRectangleBorder(
