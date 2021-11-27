@@ -7,6 +7,7 @@ import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 export 'package:flutter_monet_theme/flutter_monet_theme.dart';
 import 'dart:ui' as ui;
 
+import 'animated.dart';
 import 'generation.dart';
 import 'inherited.dart';
 import 'model.dart';
@@ -140,18 +141,23 @@ class MD3Themes extends StatefulWidget {
     Key? key,
     this.mediaQueryData,
     this.targetPlatform,
+    this.seed,
     this.monetThemeForFallbackPalette,
     this.textTheme,
     this.elevationTheme,
     this.stateLayerOpacityTheme,
+    this.animated = true,
     required this.builder,
-  }) : super(key: key);
+  })  : assert(seed == null || monetThemeForFallbackPalette == null),
+        super(key: key);
   final MediaQueryData? mediaQueryData;
   final TargetPlatform? targetPlatform;
+  final Color? seed;
   final MonetTheme? monetThemeForFallbackPalette;
   final MD3TextAdaptativeTheme? textTheme;
   final MD3ElevationTheme? elevationTheme;
   final MD3StateLayerOpacityTheme? stateLayerOpacityTheme;
+  final bool animated;
   final MD3ThemedBuilder builder;
 
   static const _kDesktopPlatforms = {
@@ -200,7 +206,7 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
         MediaQueryData.fromWindow(ui.window);
     final targetPlatform = widget.targetPlatform ?? defaultTargetPlatform;
     final palette = context.palette;
-    final elevationTheme = widget.elevationTheme ?? baselineMD3Elevation;
+    final elevationTheme = widget.elevationTheme ?? MD3ElevationTheme.baseline;
     final stateLayerOpacity =
         widget.stateLayerOpacityTheme ?? MD3StateLayerOpacityTheme.baseline;
 
@@ -235,8 +241,9 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
     }
 
     final willUseFallback = widget.monetThemeForFallbackPalette != null &&
-        context.palette.source != PaletteSource.platform;
-    final seed = context.palette.primaryColor;
+        widget.seed == null &&
+        palette.source != PaletteSource.platform;
+    final seed = widget.seed ?? palette.primaryColor;
     final textScaleFactor = mediaQuery.textScaleFactor;
 
     final identity = _ThemesIdentity(
@@ -265,8 +272,9 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
     final themes = _cache.putIfAbsent(
       identity,
       () => themesFromPlatform(
-        palette,
-        monetThemeForFallbackPalette: widget.monetThemeForFallbackPalette,
+        PlatformPalette.fallback(primaryColor: seed),
+        monetThemeForFallbackPalette:
+            willUseFallback ? widget.monetThemeForFallbackPalette : null,
         textTheme: resolvedTextTheme,
         elevationTheme: elevationTheme,
         textScaleFactor: textScaleFactor,
@@ -281,19 +289,25 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
       stateLayerOpacity: stateLayerOpacity,
     );
 
+    final innerBuilder = Builder(
+      builder: (context) {
+        return widget.builder(
+          context,
+          themes.lightTheme,
+          themes.darkTheme,
+        );
+      },
+    );
+
     return _InheritedMD3DeviceInfo(
       sizeClass: windowSizeClass,
       deviceType: deviceType,
-      child: InheritedMD3Theme(
-        data: md3ThemeData,
-        child: Builder(
-          builder: (context) => widget.builder(
-            context,
-            themes.lightTheme,
-            themes.darkTheme,
-          ),
-        ),
-      ),
+      child: widget.animated
+          ? AnimatedMD3Theme(data: md3ThemeData, child: innerBuilder)
+          : InheritedMD3Theme(
+              data: md3ThemeData,
+              child: innerBuilder,
+            ),
     );
   }
 }
