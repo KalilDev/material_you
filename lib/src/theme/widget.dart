@@ -7,6 +7,7 @@ import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 export 'package:flutter_monet_theme/flutter_monet_theme.dart';
 import 'dart:ui' as ui;
 
+import '../single_cache.dart';
 import 'animated.dart';
 import 'generation.dart';
 import 'inherited.dart';
@@ -26,27 +27,6 @@ typedef MD3ThemedBuilder = Widget Function(
   ThemeData light,
   ThemeData dark,
 );
-
-class _SingleCache<K, V> {
-  K? key;
-  V? value;
-  V? operator [](K key) => key == this.key ? value : null;
-  operator []=(K key, V value) {
-    this.key = key;
-    this.value = value;
-  }
-
-  bool contains(K key) => this.key == key;
-  V putIfAbsent(K key, V Function() ifAbsent) {
-    if (key == this.key) {
-      return value!;
-    }
-    final newValue = ifAbsent();
-    value = newValue;
-    this.key = key;
-    return newValue;
-  }
-}
 
 // An opaque object which, when == to another [_TextThemeIdentity], determines
 // if the [MD3TextTheme]s are equal. This is an temporary workaround while it
@@ -136,8 +116,11 @@ class _ThemesIdentity {
   }
 }
 
-class MD3Themes extends StatefulWidget {
-  const MD3Themes({
+typedef MD3Themes = MD3ThemedApp<NoAppScheme, NoAppTheme>;
+
+class MD3ThemedApp<S extends AppCustomColorScheme<S>,
+    T extends AppCustomColorTheme<S, T>> extends StatefulWidget {
+  const MD3ThemedApp({
     Key? key,
     this.mediaQueryData,
     this.targetPlatform,
@@ -146,6 +129,7 @@ class MD3Themes extends StatefulWidget {
     this.textTheme,
     this.elevationTheme,
     this.stateLayerOpacityTheme,
+    this.appThemeFactory,
     this.animated = true,
     required this.builder,
   })  : assert(seed == null || monetThemeForFallbackPalette == null),
@@ -157,6 +141,7 @@ class MD3Themes extends StatefulWidget {
   final MD3TextAdaptativeTheme? textTheme;
   final MD3ElevationTheme? elevationTheme;
   final MD3StateLayerOpacityTheme? stateLayerOpacityTheme;
+  final T Function(MonetTheme)? appThemeFactory;
   final bool animated;
   final MD3ThemedBuilder builder;
 
@@ -167,12 +152,44 @@ class MD3Themes extends StatefulWidget {
   };
 
   @override
-  State<MD3Themes> createState() => _MD3ThemesState();
+  State<MD3ThemedApp<S, T>> createState() => _MD3ThemedAppState<S, T>();
 }
 
-class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
-  final _cache = _SingleCache<_ThemesIdentity, Themes>();
-  final _textThemeCache = _SingleCache<_TextThemeIdentity, MD3TextTheme>();
+class _AppThemeIdentity {
+  final _ThemesIdentity themesIdentity;
+  final Function? appThemeFactory;
+
+  const _AppThemeIdentity({
+    required this.themesIdentity,
+    required this.appThemeFactory,
+  });
+
+  @override
+  int get hashCode => Object.hashAll([
+        themesIdentity,
+        appThemeFactory,
+      ]);
+
+  @override
+  bool operator ==(other) {
+    if (identical(other, this)) {
+      return true;
+    }
+    if (other is! _AppThemeIdentity) {
+      return false;
+    }
+    return other.themesIdentity == themesIdentity &&
+        other.appThemeFactory == appThemeFactory;
+  }
+}
+
+class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
+        T extends AppCustomColorTheme<S, T>> extends State<MD3ThemedApp<S, T>>
+    with WidgetsBindingObserver {
+  final _cache = SingleCache<_ThemesIdentity, Themes>();
+  final _appThemeCache = SingleCache<_AppThemeIdentity, T?>();
+  final _textThemeCache = SingleCache<_TextThemeIdentity, MD3TextTheme>();
+  final _childKey = GlobalKey();
   // Register as an WidgetsBindingObserver so we are notified of metrics
   // changes.
   @override
@@ -211,7 +228,7 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
         widget.stateLayerOpacityTheme ?? MD3StateLayerOpacityTheme.baseline;
 
     final MD3DeviceType deviceType;
-    if (MD3Themes._kDesktopPlatforms.contains(targetPlatform)) {
+    if (MD3ThemedApp._kDesktopPlatforms.contains(targetPlatform)) {
       deviceType = MD3DeviceType.desktop;
     } else if (mediaQuery.size.longestSide <= 180) {
       // Estimate smaller than 180 devices to be watches
@@ -281,6 +298,12 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
         stateLayerOpacityTheme: stateLayerOpacity,
       ),
     );
+    // Cache the app theme generated from the theme
+    final appTheme = _appThemeCache.putIfAbsent(
+      _AppThemeIdentity(
+          themesIdentity: identity, appThemeFactory: widget.appThemeFactory),
+      () => widget.appThemeFactory?.call(themes.monetTheme),
+    );
 
     final md3ThemeData = MD3ThemeData(
       colorTheme: themes.monetTheme,
@@ -291,11 +314,27 @@ class _MD3ThemesState extends State<MD3Themes> with WidgetsBindingObserver {
 
     final innerBuilder = Builder(
       builder: (context) {
-        return widget.builder(
+        var child = widget.builder(
           context,
           themes.lightTheme,
           themes.darkTheme,
         );
+        child = KeyedSubtree(
+          key: _childKey,
+          child: child,
+        );
+        if (appTheme != null) {
+          return widget.animated
+              ? AnimatedAppCustomColorTheme<S, T>(
+                  data: appTheme,
+                  child: child,
+                )
+              : InheritedAppCustomColorTheme<S, T>(
+                  data: appTheme,
+                  child: child,
+                );
+        }
+        return child;
       },
     );
 
