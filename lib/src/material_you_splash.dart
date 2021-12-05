@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
@@ -57,6 +58,22 @@ class _MaterialYouInkSplashFactory extends InteractiveInkFeatureFactory {
     double? radius,
     VoidCallback? onRemoved,
   }) {
+    if (kIsWeb) {
+      // Fallback because blur is not implemented on web
+      return InkSplash.splashFactory.create(
+        controller: controller,
+        referenceBox: referenceBox,
+        position: position,
+        color: color,
+        containedInkWell: containedInkWell,
+        rectCallback: rectCallback,
+        borderRadius: borderRadius,
+        customBorder: customBorder,
+        radius: radius,
+        onRemoved: onRemoved,
+        textDirection: textDirection,
+      );
+    }
     return MaterialYouInkSplash(
       controller: controller,
       referenceBox: referenceBox,
@@ -72,8 +89,6 @@ class _MaterialYouInkSplashFactory extends InteractiveInkFeatureFactory {
     );
   }
 }
-
-class _SplashParameters {}
 
 /// A visual reaction on a piece of [Material] to user input.
 ///
@@ -185,7 +200,6 @@ class MaterialYouInkSplash extends InteractiveInkFeature
 
   void markNeedsPaint() {
     updateRenderObject();
-    controller.markNeedsPaint();
   }
 
   /// Used to specify this type of ink splash for an [InkWell], [InkResponse],
@@ -329,13 +343,13 @@ class MaterialYouInkSplash extends InteractiveInkFeature
       return;
     }
     renderObject!
-      .._shape = shape
-      .._position = _position ?? referenceBox.size.center(Offset.zero)
-      .._radius = _innerCircleController!.value * _kInnerCircleRadius
-      .._ripples = _ripples
-      .._innerColor = _innerColor.withAlpha(_alpha.value)
-      .._transformToReferenceBox = transformToReferenceBox
-      .._referenceBoxSize = referenceBox.size;
+      ..shape = shape
+      ..position = _position ?? referenceBox.size.center(Offset.zero)
+      ..radius = _innerCircleController!.value * _kInnerCircleRadius
+      ..ripples = _ripples
+      ..innerColor = _innerColor.withAlpha(_alpha.value)
+      ..transformToReferenceBox = transformToReferenceBox
+      ..referenceBoxSize = referenceBox.size;
   }
 }
 
@@ -520,7 +534,7 @@ abstract class _RipplePainter extends CustomPainter {
     final viewRect = Offset.zero & size;
     final shapePath = shape.getInnerPath(viewRect);
     for (final ripple in ripples) {
-      paint..color = ripple.color;
+      paint.color = ripple.color;
       final path = createPathForRipple(
         shape: shapePath,
         ripple: ripple,
@@ -615,6 +629,7 @@ class _MaterialYouSplashRenderObject extends RenderBox {
     }
     _referenceBoxSize = referenceBoxSize;
     markNeedsPaint();
+    markNeedsLayout();
   }
 
   List<_Ripple> _ripples;
@@ -630,12 +645,19 @@ class _MaterialYouSplashRenderObject extends RenderBox {
   ClipPathLayer? _clipLayer;
 
   @override
-  bool get sizedByParent => true;
+  bool get sizedByParent => false;
   final kInnerCircleRadius = 18.0;
 
   @override
+  void performLayout() {
+    // TODO: This is clearly incorrect. We may not be notified of the size of
+    // the reference box.
+    size = Size(_referenceBoxSize.width, _referenceBoxSize.height);
+  }
+
+  @override
   Size computeDryLayout(BoxConstraints constraints) {
-    return constraints.biggest;
+    return _referenceBoxSize;
   }
 
   final kRippleStrokeWidth = 2.0;
