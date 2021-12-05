@@ -283,8 +283,10 @@ ThemeData _themeFrom(
         borderRadius: BorderRadius.circular(24.0),
       ),
       backgroundColor: scheme.inverseSurface,
+      actionTextColor: scheme.inversePrimary,
+      disabledActionTextColor: scheme.onInverseSurface.withOpacity(0.38),
       contentTextStyle: TextStyle(
-        color: scheme.inverseOnSurface,
+        color: scheme.onInverseSurface,
       ),
     ),
     /*chipTheme: ChipThemeData.fromDefaults(
