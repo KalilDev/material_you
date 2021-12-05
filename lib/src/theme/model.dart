@@ -1,6 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 
+abstract class NoAppScheme extends AppCustomColorScheme<NoAppScheme> {}
+
+abstract class NoAppTheme extends AppCustomColorTheme<NoAppScheme, NoAppTheme> {
+}
+
+abstract class AppCustomColorScheme<Self> {
+  const AppCustomColorScheme();
+  Self lerpWith(Self b, double t);
+}
+
+abstract class AppCustomColorTheme<S extends AppCustomColorScheme<S>,
+    Self extends AppCustomColorTheme<S, Self>> {
+  const AppCustomColorTheme();
+  S get light;
+  S get dark;
+  Self lerpWith(Self b, double t);
+}
+
 class Themes {
   final ThemeData lightTheme;
   final ThemeData darkTheme;
