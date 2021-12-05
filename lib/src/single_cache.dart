@@ -10,7 +10,7 @@ class SingleCache<K, V> {
   bool contains(K key) => this.key == key;
   V putIfAbsent(K key, V Function() ifAbsent) {
     if (key == this.key) {
-      return value!;
+      return value as V;
     }
     final newValue = ifAbsent();
     value = newValue;
