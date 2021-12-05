@@ -2,6 +2,44 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
+class AppCustomColorSchemeTween<S extends AppCustomColorScheme<S>>
+    extends Tween<S?> {
+  AppCustomColorSchemeTween({S? begin, S? end}) : super(begin: begin, end: end);
+
+  @override
+  S? lerp(double t) {
+    if (begin == null && end == null) {
+      return null;
+    }
+    if (begin == null) {
+      return t < 0.5 ? null : end;
+    }
+    if (end == null) {
+      return t < 0.5 ? begin : null;
+    }
+    return begin!.lerpWith(end!, t);
+  }
+}
+
+class AppCustomColorThemeTween<S extends AppCustomColorScheme<S>,
+    T extends AppCustomColorTheme<S, T>> extends Tween<T?> {
+  AppCustomColorThemeTween({T? begin, T? end}) : super(begin: begin, end: end);
+
+  @override
+  T? lerp(double t) {
+    if (begin == null && end == null) {
+      return null;
+    }
+    if (begin == null) {
+      return t < 0.5 ? null : end;
+    }
+    if (end == null) {
+      return t < 0.5 ? begin : null;
+    }
+    return begin!.lerpWith(end!, t);
+  }
+}
+
 class MonetColorSchemeTween extends Tween<MonetColorScheme> {
   MonetColorSchemeTween({MonetColorScheme? begin, MonetColorScheme? end})
       : super(begin: begin, end: end);

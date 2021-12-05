@@ -64,6 +64,49 @@ class InheritedMonetColorScheme extends InheritedWidget {
       ?.scheme;
 }
 
+class InheritedAppCustomColorScheme<S extends AppCustomColorScheme<S>>
+    extends InheritedWidget {
+  final S data;
+
+  const InheritedAppCustomColorScheme({
+    Key? key,
+    required this.data,
+    required Widget child,
+  }) : super(child: child, key: key);
+
+  @override
+  bool updateShouldNotify(InheritedAppCustomColorScheme oldWidget) =>
+      data != oldWidget.data;
+
+  static S? maybeOf<S extends AppCustomColorScheme<S>>(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<
+              InheritedAppCustomColorScheme<S>>()
+          ?.data;
+}
+
+class InheritedAppCustomColorTheme<S extends AppCustomColorScheme<S>,
+    T extends AppCustomColorTheme<S, T>> extends InheritedWidget {
+  final T data;
+
+  const InheritedAppCustomColorTheme({
+    Key? key,
+    required this.data,
+    required Widget child,
+  }) : super(child: child, key: key);
+
+  @override
+  bool updateShouldNotify(InheritedAppCustomColorTheme oldWidget) =>
+      data != oldWidget.data;
+
+  static T? maybeOf<S extends AppCustomColorScheme<S>,
+          T extends AppCustomColorTheme<S, T>>(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<
+              InheritedAppCustomColorTheme<S, T>>()
+          ?.data;
+}
+
 class InheritedMD3Theme extends InheritedWidget {
   final MD3ThemeData data;
 
