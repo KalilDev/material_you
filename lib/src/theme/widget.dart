@@ -131,8 +131,10 @@ class MD3ThemedApp<S extends AppCustomColorScheme<S>,
     this.stateLayerOpacityTheme,
     this.appThemeFactory,
     this.animated = true,
+    this.usePlatformPalette = true,
     required this.builder,
   })  : assert(seed == null || monetThemeForFallbackPalette == null),
+        assert(usePlatformPalette || monetThemeForFallbackPalette != null),
         super(key: key);
   final MediaQueryData? mediaQueryData;
   final TargetPlatform? targetPlatform;
@@ -144,6 +146,7 @@ class MD3ThemedApp<S extends AppCustomColorScheme<S>,
   final T Function(MonetTheme)? appThemeFactory;
   final bool animated;
   final MD3ThemedBuilder builder;
+  final bool usePlatformPalette;
 
   static const _kDesktopPlatforms = {
     TargetPlatform.windows,
@@ -258,8 +261,9 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
     }
 
     final willUseFallback = widget.monetThemeForFallbackPalette != null &&
-        widget.seed == null &&
-        palette.source != PaletteSource.platform;
+            widget.seed == null &&
+            palette.source != PaletteSource.platform ||
+        !widget.usePlatformPalette;
     final seed = widget.seed ?? palette.primaryColor;
     final textScaleFactor = mediaQuery.textScaleFactor;
 
