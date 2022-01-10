@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 
 @immutable
+class MD3DraggableElevation extends MD3MaterialStateElevation {
+  MD3DraggableElevation(
+    MD3ElevationLevel regular,
+    MD3ElevationLevel dragged,
+  ) : super(
+          regular,
+          regular,
+          dragged: dragged,
+        );
+}
+
+@immutable
 class MD3StateOverlayColor extends MaterialStateProperty<Color> {
   MD3StateOverlayColor(this.color, this.opacityTheme);
 
@@ -178,17 +190,18 @@ class MD3MaterialStateElevation extends MD3ElevationLevel
 }
 
 @immutable
-class MD3DisablableCursor extends MaterialStateProperty<MouseCursor> {
-  MD3DisablableCursor(this.normal, this.disabled);
+class MD3DisablableProperty<T> extends MaterialStateProperty<T> {
+  MD3DisablableProperty(this.normal, this.disabled);
 
-  final MouseCursor normal;
-  final MouseCursor disabled;
-
+  final T normal;
+  final T disabled;
   @override
-  MouseCursor resolve(Set<MaterialState> states) {
+  T resolve(Set<MaterialState> states) {
     if (states.contains(MaterialState.disabled)) {
-      return disabled;
+      return MaterialStateProperty.resolveAs(disabled, states);
     }
-    return normal;
+    return MaterialStateProperty.resolveAs(normal, states);
   }
 }
+
+typedef MD3DisablableCursor = MD3DisablableProperty<MouseCursor>;
