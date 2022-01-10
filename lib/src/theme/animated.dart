@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
+import 'inherited.dart';
+import 'model.dart';
 import 'tween.dart';
 
 typedef AnimatedMonetColorScheme

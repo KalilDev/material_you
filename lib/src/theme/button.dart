@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:material_you/src/theme/inherited.dart';
 
 import '../material_you_splash.dart';
-import 'generation.dart';
+import 'inherited.dart';
 import 'material_state.dart';
+import 'model.dart';
 
 abstract class MD3ElevatedButton {
   static ButtonStyle styleFrom({

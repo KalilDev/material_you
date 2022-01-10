@@ -1,11 +1,8 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
-import 'dart:math' as math;
-import 'package:flutter_monet_theme/flutter_monet_theme.dart';
-export 'package:flutter_monet_theme/flutter_monet_theme.dart';
-import 'dart:ui' as ui;
 
 import '../single_cache.dart';
 import 'animated.dart';

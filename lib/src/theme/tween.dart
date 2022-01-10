@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
+import 'model.dart';
 
 class AppCustomColorSchemeTween<S extends AppCustomColorScheme<S>>
     extends Tween<S?> {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 
+export 'package:flutter_monet_theme/flutter_monet_theme.dart';
+
 abstract class NoAppScheme extends AppCustomColorScheme<NoAppScheme> {}
 
 abstract class NoAppTheme extends AppCustomColorTheme<NoAppScheme, NoAppTheme> {
@@ -30,12 +32,14 @@ class Themes {
     this.monetTheme,
   );
 
+  @override
   int get hashCode => Object.hashAll([
         lightTheme,
         darkTheme,
         monetTheme,
       ]);
 
+  @override
   bool operator ==(other) {
     if (identical(other, this)) {
       return true;
@@ -63,6 +67,7 @@ class MD3ThemeData {
     required this.stateLayerOpacity,
   });
 
+  @override
   int get hashCode => Object.hashAll([
         colorTheme,
         textTheme,
@@ -70,6 +75,7 @@ class MD3ThemeData {
         stateLayerOpacity,
       ]);
 
+  @override
   bool operator ==(other) {
     if (identical(other, this)) {
       return true;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 
 import 'model.dart';
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_monet_theme/flutter_monet_theme.dart';
+
+import 'model.dart';
 
 @immutable
 class MD3DraggableElevation extends MD3MaterialStateElevation {
@@ -102,11 +103,17 @@ class _CallbackMD3MaterialStateElevation extends MD3MaterialStateElevation {
           MD3ElevationLevel(0),
           MD3ElevationLevel(0),
         );
+  @override
   MD3ElevationLevel get normal => resolve({});
+  @override
   MD3ElevationLevel get hovered => resolve({MaterialState.hovered});
+  @override
   MD3ElevationLevel? get dragged => resolve({MaterialState.dragged});
+  @override
   MD3ElevationLevel? get focused => resolve({MaterialState.focused});
+  @override
   MD3ElevationLevel? get disabled => resolve({MaterialState.disabled});
+  @override
   MD3ElevationLevel? get pressed => resolve({
         MaterialState.pressed,
         MaterialState.hovered,
