@@ -289,6 +289,20 @@ ThemeData _themeFrom(
         color: scheme.onInverseSurface,
       ),
     ),
+    inputDecorationTheme: InputDecorationTheme(
+      fillColor: scheme.surfaceVariant,
+      iconColor: scheme.onSurfaceVariant,
+      focusColor: Color.alphaBlend(
+        scheme.onSurfaceVariant.withOpacity(stateLayerOpacityTheme.focused),
+        scheme.surfaceVariant,
+      ),
+      hoverColor: Color.alphaBlend(
+        scheme.onSurfaceVariant.withOpacity(stateLayerOpacityTheme.hovered),
+        scheme.surfaceVariant,
+      ),
+      prefixIconColor: scheme.onSurfaceVariant,
+      suffixIconColor: scheme.onSurfaceVariant,
+    ),
     /*chipTheme: ChipThemeData.fromDefaults(
       secondaryColor: scheme.secondary,
       labelStyle: TextStyle(
