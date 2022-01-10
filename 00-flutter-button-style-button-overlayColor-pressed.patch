@@ -1,0 +1,13 @@
+diff --git a/packages/flutter/lib/src/material/button_style_button.dart b/packages/flutter/lib/src/material/button_style_button.dart
+index bcbe421f2f..241b8b9623 100644
+--- a/packages/flutter/lib/src/material/button_style_button.dart
++++ b/packages/flutter/lib/src/material/button_style_button.dart
+@@ -365,7 +365,7 @@ class _ButtonStyleState extends State<ButtonStyleButton> with MaterialStateMixin
+           autofocus: widget.autofocus,
+           splashFactory: resolvedSplashFactory,
+           overlayColor: overlayColor,
+-          highlightColor: Colors.transparent,
++          highlightColor: overlayColor.resolve({MaterialState.pressed}) ?? Colors.transparent,
+           customBorder: resolvedShape,
+           child: IconTheme.merge(
+             data: IconThemeData(color: resolvedForegroundColor),
