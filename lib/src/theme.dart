@@ -1,4 +1,5 @@
 export 'theme/animated.dart';
+export 'theme/button.dart';
 export 'theme/generation.dart';
 export 'theme/inherited.dart';
 export 'theme/material_state.dart';

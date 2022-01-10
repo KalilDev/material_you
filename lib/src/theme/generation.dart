@@ -8,6 +8,7 @@ import 'package:flutter_monet_theme/flutter_monet_theme.dart';
 export 'package:flutter_monet_theme/flutter_monet_theme.dart';
 import 'dart:ui' as ui;
 
+import 'button.dart';
 import 'material_state.dart';
 import 'model.dart';
 
@@ -32,7 +33,7 @@ Themes themesFromPlatform(
   double textScaleFactor = 1,
   MD3StateLayerOpacityTheme? stateLayerOpacityTheme,
 }) {
-  elevationTheme ??= baselineMD3Elevation;
+  elevationTheme ??= MD3ElevationTheme.baseline;
   stateLayerOpacityTheme ??= MD3StateLayerOpacityTheme.baseline;
   MonetTheme monet;
   if (palette.source != PaletteSource.platform) {
@@ -74,7 +75,7 @@ Themes themesFromMonet(
   MD3StateLayerOpacityTheme? stateLayerOpacityTheme,
 }) {
   textTheme ??= generateTextTheme().resolveTo(deviceType);
-  elevationTheme ??= baselineMD3Elevation;
+  elevationTheme ??= MD3ElevationTheme.baseline;
   stateLayerOpacityTheme ??= MD3StateLayerOpacityTheme.baseline;
   return Themes(
     _themeFrom(
@@ -313,176 +314,29 @@ ThemeData _themeFrom(
           : Brightness.dark,
     ),*/
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: _elevatedButtonStyle(
-        scheme,
-        textScaleFactor,
-        textTheme,
-        elevationTheme,
-        stateLayerOpacityTheme,
+      style: MD3ElevatedButton.defaultStyleFor(
+        scheme: scheme,
+        textScaleFactor: textScaleFactor,
+        textTheme: textTheme,
+        stateLayerOpacityTheme: stateLayerOpacityTheme,
+        elevationTheme: elevationTheme,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: _outlinedButtonStyle(
-        scheme,
-        textScaleFactor,
-        textTheme,
-        stateLayerOpacityTheme,
+      style: MD3OutlinedButton.defaultStyleFor(
+        scheme: scheme,
+        textScaleFactor: textScaleFactor,
+        textTheme: textTheme,
+        stateLayerOpacityTheme: stateLayerOpacityTheme,
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: _textButtonStyle(
-        scheme,
-        textScaleFactor,
-        textTheme,
-        stateLayerOpacityTheme,
+      style: MD3TextButton.defaultStyleFor(
+        scheme: scheme,
+        textScaleFactor: textScaleFactor,
+        textTheme: textTheme,
+        stateLayerOpacityTheme: stateLayerOpacityTheme,
       ),
     ),
   );
-}
-
-ButtonStyle _textButtonStyle(
-  MonetColorScheme scheme,
-  double textScaleFactor,
-  MD3TextTheme textTheme,
-  MD3StateLayerOpacityTheme stateLayerOpacity,
-) {
-  final EdgeInsetsGeometry scaledPadding = ButtonStyleButton.scaledPadding(
-    const EdgeInsets.symmetric(horizontal: 12),
-    const EdgeInsets.symmetric(horizontal: 8),
-    const EdgeInsets.symmetric(horizontal: 4),
-    textScaleFactor,
-  );
-  return ButtonStyle(
-    shape: MaterialStateProperty.all(StadiumBorder()),
-    backgroundColor: MaterialStateProperty.all(Colors.transparent),
-    foregroundColor: MD3DisablableColor(
-      scheme.primary,
-      disabledColor: scheme.onSurface,
-    ),
-    overlayColor: MD3StateOverlayColor(scheme.primary, stateLayerOpacity),
-    padding: MaterialStateProperty.all(scaledPadding),
-    fixedSize: MaterialStateProperty.all(Size.fromHeight(40)),
-    minimumSize: MaterialStateProperty.all(Size(48, 0)),
-    textStyle: MaterialStateProperty.all(textTheme.labelLarge),
-    splashFactory: MaterialYouInkSplash.splashFactory,
-  );
-}
-
-ButtonStyle _elevatedButtonStyle(
-  MonetColorScheme scheme,
-  double textScaleFactor,
-  MD3TextTheme textTheme,
-  MD3ElevationTheme elevation,
-  MD3StateLayerOpacityTheme stateLayerOpacity,
-) {
-  final EdgeInsetsGeometry scaledPadding = ButtonStyleButton.scaledPadding(
-    const EdgeInsets.symmetric(horizontal: 24),
-    const EdgeInsets.symmetric(horizontal: 16),
-    const EdgeInsets.symmetric(horizontal: 8),
-    textScaleFactor,
-  );
-  return ButtonStyle(
-    shape: MaterialStateProperty.all(StadiumBorder()),
-    backgroundColor: _DefaultElevatedButtonBackgroundColor(scheme, elevation),
-    foregroundColor:
-        MD3DisablableColor(scheme.primary, disabledColor: scheme.onSurface),
-    overlayColor: MD3StateOverlayColor(scheme.primary, stateLayerOpacity),
-    elevation: _DefaultElevatedButtonElevation(elevation),
-    padding: MaterialStateProperty.all(scaledPadding),
-    fixedSize: MaterialStateProperty.all(Size.fromHeight(40)),
-    textStyle: MaterialStateProperty.all(textTheme.labelLarge),
-    splashFactory: MaterialYouInkSplash.splashFactory,
-  );
-}
-
-ButtonStyle _outlinedButtonStyle(
-  MonetColorScheme scheme,
-  double textScaleFactor,
-  MD3TextTheme textTheme,
-  MD3StateLayerOpacityTheme stateLayerOpacity,
-) {
-  final EdgeInsetsGeometry scaledPadding = ButtonStyleButton.scaledPadding(
-    const EdgeInsets.symmetric(horizontal: 24),
-    const EdgeInsets.symmetric(horizontal: 16),
-    const EdgeInsets.symmetric(horizontal: 8),
-    textScaleFactor,
-  );
-  return ButtonStyle(
-    shape: _DefaultOutlinedButtonShape(scheme),
-    backgroundColor: MaterialStateProperty.all(Colors.transparent),
-    foregroundColor: MD3DisablableColor(
-      scheme.primary,
-      disabledColor: scheme.onSurface,
-    ),
-    overlayColor: MD3StateOverlayColor(scheme.primary, stateLayerOpacity),
-    padding: MaterialStateProperty.all(scaledPadding),
-    fixedSize: MaterialStateProperty.all(Size.fromHeight(40)),
-    textStyle: MaterialStateProperty.all(textTheme.labelLarge),
-    splashFactory: MaterialYouInkSplash.splashFactory,
-  );
-}
-
-@immutable
-class _DefaultOutlinedButtonShape
-    extends MaterialStateProperty<OutlinedBorder> {
-  _DefaultOutlinedButtonShape(this.scheme);
-
-  final MonetColorScheme scheme;
-
-  @override
-  OutlinedBorder resolve(Set<MaterialState> states) {
-    double width = 1;
-    Color color = scheme.outline;
-    if (states.contains(MaterialState.focused)) {
-      color = scheme.primary;
-    }
-    if (states.contains(MaterialState.disabled)) {
-      color = scheme.outline.withOpacity(0.12);
-    }
-    return StadiumBorder(side: BorderSide(color: color, width: width));
-  }
-}
-
-@immutable
-class _DefaultElevatedButtonElevation extends MaterialStateProperty<double> {
-  _DefaultElevatedButtonElevation(this.elevation);
-
-  final MD3ElevationTheme elevation;
-
-  @override
-  double resolve(Set<MaterialState> states) {
-    if (states.contains(MaterialState.disabled)) {
-      return elevation.level0.value;
-    }
-    if (states.contains(MaterialState.hovered)) {
-      return elevation.level2.value;
-    }
-    return elevation.level1.value;
-  }
-}
-
-@immutable
-class _DefaultElevatedButtonBackgroundColor
-    extends MaterialStateProperty<Color> {
-  _DefaultElevatedButtonBackgroundColor(this.scheme, this.elevation);
-
-  final MonetColorScheme scheme;
-  final MD3ElevationTheme elevation;
-
-  @override
-  Color resolve(Set<MaterialState> states) {
-    Color color = scheme.surface;
-    if (states.contains(MaterialState.disabled)) {
-      color = scheme.onSurface;
-    }
-    Color tint = MD3ElevationLevel.surfaceTint(scheme);
-    MD3ElevationLevel level = elevation.level1;
-    if (states.contains(MaterialState.disabled)) {
-      level = elevation.level0;
-      color = color.withOpacity(0.12);
-    } else if (states.contains(MaterialState.hovered)) {
-      level = elevation.level2;
-    }
-    return level.overlaidColor(color, tint);
-  }
 }
