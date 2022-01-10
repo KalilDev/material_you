@@ -299,6 +299,7 @@ class _DefaultMD3OutlinedButtonBorderSide
 
   @override
   BorderSide resolve(Set<MaterialState> states) {
+    states = materialStatesWithImplicits(states);
     Color color = outline;
     if (states.contains(MaterialState.disabled)) {
       color = outline.withOpacity(0.12);
