@@ -10,7 +10,7 @@ class MD3StateOverlayColor extends MaterialStateProperty<Color> {
 
   @override
   Color resolve(Set<MaterialState> states) {
-    states = statesWithImplicitHover(states);
+    states = materialStatesWithImplicits(states);
     final color = MaterialStateProperty.resolveAs(this.color, states);
     if (states.contains(MaterialState.dragged)) {
       return color.withOpacity(opacityTheme.dragged);
@@ -95,7 +95,11 @@ class _CallbackMD3MaterialStateElevation extends MD3MaterialStateElevation {
   MD3ElevationLevel? get dragged => resolve({MaterialState.dragged});
   MD3ElevationLevel? get focused => resolve({MaterialState.focused});
   MD3ElevationLevel? get disabled => resolve({MaterialState.disabled});
-  MD3ElevationLevel? get pressed => resolve({MaterialState.pressed});
+  MD3ElevationLevel? get pressed => resolve({
+        MaterialState.pressed,
+        MaterialState.hovered,
+        MaterialState.focused,
+      });
 
   final MD3ElevationLevel Function(Set<MaterialState> states) _resolve;
 
@@ -103,7 +107,26 @@ class _CallbackMD3MaterialStateElevation extends MD3MaterialStateElevation {
   MD3ElevationLevel resolve(Set<MaterialState> states) => _resolve(states);
 }
 
-Set<MaterialState> statesWithImplicitHover(Set<MaterialState> states) => {
+/// Returns the set of all the [MaterialState]s implied by [states].
+///
+/// The [MaterialState]s must be used from the most specific to the least
+/// specific, in the following order:
+/// - [MaterialState.disabled]
+/// - [MaterialState.error]
+/// - [MaterialState.dragged]
+/// - [MaterialState.pressed]
+/// - [MaterialState.hovered]
+/// - [MaterialState.focused]
+/// - [MaterialState.scrolledUnder]
+/// - [MaterialState.selected]
+///
+/// The implied states are the following:
+///
+/// [MaterialState.pressed]:
+/// - [MaterialState.hovered]
+/// - [MaterialState.focused]
+Set<MaterialState> materialStatesWithImplicits(Set<MaterialState> states) => {
+      if (states.contains(MaterialState.pressed)) MaterialState.focused,
       if (states.contains(MaterialState.pressed)) MaterialState.hovered,
       ...states,
     };
@@ -128,12 +151,13 @@ class MD3MaterialStateElevation extends MD3ElevationLevel
   final MD3ElevationLevel? pressed;
 
   static MD3MaterialStateElevation resolveWith(
-          MD3ElevationLevel Function(Set<MaterialState>) resolver) =>
+    MD3ElevationLevel Function(Set<MaterialState>) resolver,
+  ) =>
       _CallbackMD3MaterialStateElevation(resolver);
 
   @override
   MD3ElevationLevel resolve(Set<MaterialState> states) {
-    states = statesWithImplicitHover(states);
+    states = materialStatesWithImplicits(states);
     if (states.contains(MaterialState.disabled) && disabled != null) {
       return disabled!;
     }
