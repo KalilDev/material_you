@@ -224,10 +224,14 @@ ThemeData _themeFrom(
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: scheme.surfaceVariant,
     ),
-    // TODO:
     bannerTheme: MaterialBannerThemeData(
-      backgroundColor: scheme.primaryContainer,
-      contentTextStyle: TextStyle(color: scheme.onPrimaryContainer),
+      backgroundColor: elevationTheme.level1.overlaidColor(
+        scheme.surface,
+        MD3ElevationLevel.surfaceTint(scheme),
+      ),
+      contentTextStyle: TextStyle(color: scheme.onSurface),
+      elevation: elevationTheme.level1.value,
+    ),
     ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: scheme.primary,
