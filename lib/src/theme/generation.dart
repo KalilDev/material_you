@@ -232,6 +232,9 @@ ThemeData _themeFrom(
       contentTextStyle: TextStyle(color: scheme.onSurface),
       elevation: elevationTheme.level1.value,
     ),
+    dividerTheme: DividerThemeData(
+      color: scheme.outline,
+    ),
     ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: scheme.primary,
