@@ -1,0 +1,105 @@
+diff --git a/packages/flutter/lib/src/material/button_style.dart b/packages/flutter/lib/src/material/button_style.dart
+index da92a10fa1..a8ecc49778 100644
+--- a/packages/flutter/lib/src/material/button_style.dart
++++ b/packages/flutter/lib/src/material/button_style.dart
+@@ -119,6 +119,7 @@ class ButtonStyle with Diagnosticable {
+     this.enableFeedback,
+     this.alignment,
+     this.splashFactory,
++    this.splashColor,
+   });
+ 
+   /// The style for a button's [Text] widget descendants.
+@@ -259,6 +260,12 @@ class ButtonStyle with Diagnosticable {
+   /// ```
+   final InteractiveInkFeatureFactory? splashFactory;
+ 
++  /// The color to be used for the [InkWell] splash color, which is used for the
++  /// "ink" splashes that occur in response to taps.
++  /// 
++  /// Defaults to [ThemeData.splashColor].
++  final Color? splashColor;
++
+   /// Returns a copy of this ButtonStyle with the given fields replaced with
+   /// the new values.
+   ButtonStyle copyWith({
+@@ -281,6 +288,7 @@ class ButtonStyle with Diagnosticable {
+     bool? enableFeedback,
+     AlignmentGeometry? alignment,
+     InteractiveInkFeatureFactory? splashFactory,
++    Color? splashColor,
+   }) {
+     return ButtonStyle(
+       textStyle: textStyle ?? this.textStyle,
+@@ -302,6 +310,7 @@ class ButtonStyle with Diagnosticable {
+       enableFeedback: enableFeedback ?? this.enableFeedback,
+       alignment: alignment ?? this.alignment,
+       splashFactory: splashFactory ?? this.splashFactory,
++      splashColor: splashColor ?? this.splashColor,
+     );
+   }
+ 
+@@ -333,6 +342,7 @@ class ButtonStyle with Diagnosticable {
+       enableFeedback: enableFeedback ?? style.enableFeedback,
+       alignment: alignment ?? style.alignment,
+       splashFactory: splashFactory ?? style.splashFactory,
++      splashColor: splashColor ?? style.splashColor,
+     );
+   }
+ 
+@@ -358,6 +368,7 @@ class ButtonStyle with Diagnosticable {
+       enableFeedback,
+       alignment,
+       splashFactory,
++      splashColor,
+     );
+   }
+ 
+@@ -386,7 +397,8 @@ class ButtonStyle with Diagnosticable {
+         && other.animationDuration == animationDuration
+         && other.enableFeedback == enableFeedback
+         && other.alignment == alignment
+-        && other.splashFactory == splashFactory;
++        && other.splashFactory == splashFactory
++        && other.splashColor == splashColor;
+   }
+ 
+   @override
+@@ -410,6 +422,7 @@ class ButtonStyle with Diagnosticable {
+     properties.add(DiagnosticsProperty<Duration>('animationDuration', animationDuration, defaultValue: null));
+     properties.add(DiagnosticsProperty<bool>('enableFeedback', enableFeedback, defaultValue: null));
+     properties.add(DiagnosticsProperty<AlignmentGeometry>('alignment', alignment, defaultValue: null));
++    properties.add(DiagnosticsProperty<Color>('splashColor', splashColor, defaultValue: null));
+   }
+ 
+   /// Linearly interpolate between two [ButtonStyle]s.
+@@ -437,6 +450,7 @@ class ButtonStyle with Diagnosticable {
+       enableFeedback: t < 0.5 ? a?.enableFeedback : b?.enableFeedback,
+       alignment: AlignmentGeometry.lerp(a?.alignment, b?.alignment, t),
+       splashFactory: t < 0.5 ? a?.splashFactory : b?.splashFactory,
++      splashColor: Color.lerp(a?.splashColor, b?.splashColor, t),
+     );
+   }
+ 
+diff --git a/packages/flutter/lib/src/material/button_style_button.dart b/packages/flutter/lib/src/material/button_style_button.dart
+index bcbe421f2f..ffdb924986 100644
+--- a/packages/flutter/lib/src/material/button_style_button.dart
++++ b/packages/flutter/lib/src/material/button_style_button.dart
+@@ -269,6 +269,7 @@ class _ButtonStyleState extends State<ButtonStyleButton> with MaterialStateMixin
+     final AlignmentGeometry? resolvedAlignment = effectiveValue((ButtonStyle? style) => style?.alignment);
+     final Offset densityAdjustment = resolvedVisualDensity!.baseSizeAdjustment;
+     final InteractiveInkFeatureFactory? resolvedSplashFactory = effectiveValue((ButtonStyle? style) => style?.splashFactory);
++    final Color? resolvedSplashColor = effectiveValue((ButtonStyle? style) => style?.splashColor);
+ 
+     BoxConstraints effectiveConstraints = resolvedVisualDensity.effectiveConstraints(
+       BoxConstraints(
+@@ -364,8 +365,8 @@ class _ButtonStyleState extends State<ButtonStyleButton> with MaterialStateMixin
+           ),
+           autofocus: widget.autofocus,
+           splashFactory: resolvedSplashFactory,
++          splashColor: resolvedSplashColor,
+           overlayColor: overlayColor,
+-          highlightColor: Colors.transparent,
+           customBorder: resolvedShape,
+           child: IconTheme.merge(
+             data: IconThemeData(color: resolvedForegroundColor),
