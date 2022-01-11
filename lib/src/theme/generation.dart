@@ -235,7 +235,7 @@ ThemeData _themeFrom(
     dividerTheme: DividerThemeData(
       color: scheme.outline,
     ),
-    ),
+    checkboxTheme: _checkboxThemeFor(scheme, stateLayerOpacityTheme),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: scheme.primary,
     ),
@@ -344,3 +344,36 @@ ThemeData _themeFrom(
     ),
   );
 }
+
+CheckboxThemeData _checkboxThemeFor(MonetColorScheme scheme,
+        MD3StateLayerOpacityTheme stateLayerOpacityTheme) =>
+    CheckboxThemeData(
+      shape: const CircleBorder(),
+      overlayColor: MD3StateOverlayColor(
+        MaterialStateColor.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return scheme.onPrimaryContainer;
+          }
+          return scheme.onSurface;
+        }),
+        stateLayerOpacityTheme,
+      ),
+      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          if (states.contains(MaterialState.disabled)) {
+            return scheme.onSurface.withOpacity(0.38);
+          }
+          return scheme.primaryContainer;
+        }
+        return scheme.onSurfaceVariant;
+      }),
+      checkColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          if (states.contains(MaterialState.disabled)) {
+            return scheme.onSurface.withOpacity(0.38);
+          }
+          return scheme.onPrimaryContainer;
+        }
+        return scheme.onSurfaceVariant;
+      }),
+    );
