@@ -240,17 +240,22 @@ ThemeData _themeFrom(
       cursorColor: scheme.primary,
     ),
     navigationRailTheme: NavigationRailThemeData(
-      // TODO: check if it uses the surface tint or not
       backgroundColor: elevationTheme.level0.overlaidColor(
         scheme.surface,
         MD3ElevationLevel.surfaceTint(scheme),
       ),
-      elevation: 0.0,
+      elevation: elevationTheme.level0.value,
       selectedIconTheme: IconThemeData(
         color: scheme.onSurface,
       ),
-      selectedLabelTextStyle: TextStyle(
+      selectedLabelTextStyle: textTheme.labelMedium.copyWith(
         color: scheme.onSurface,
+      ),
+      unselectedIconTheme: IconThemeData(
+        color: scheme.onSurfaceVariant,
+      ),
+      unselectedLabelTextStyle: textTheme.labelMedium.copyWith(
+        color: scheme.onSurfaceVariant,
       ),
     ),
     // TODO: dayPeriod and input decoration
