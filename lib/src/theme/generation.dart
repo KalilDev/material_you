@@ -347,6 +347,16 @@ ThemeData _themeFrom(
         stateLayerOpacityTheme: stateLayerOpacityTheme,
       ),
     ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: scheme.inverseSurface,
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+      ),
+      // TODO: find tooltip textStyle
+      textStyle: textTheme.labelSmall.copyWith(
+        color: scheme.onInverseSurface,
+      ),
+    ),
   );
 }
 
