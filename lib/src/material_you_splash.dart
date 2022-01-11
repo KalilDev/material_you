@@ -644,34 +644,40 @@ class _MaterialYouSplashRenderObject extends RenderBox {
   ImageFilterLayer? _blurLayer;
   ClipPathLayer? _clipLayer;
 
-  @override
-  bool get sizedByParent => false;
   final kInnerCircleRadius = 18.0;
 
   @override
-  void performLayout() {
-    // TODO: This is clearly incorrect. We may not be notified of the size of
-    // the reference box.
-    size = Size(_referenceBoxSize.width, _referenceBoxSize.height);
-  }
+  bool get sizedByParent => true;
 
   @override
-  Size computeDryLayout(BoxConstraints constraints) {
-    return _referenceBoxSize;
-  }
+
+  /// Set this [RenderObject] size to the smallest size allowed by the
+  /// [BoxConstraints] because:
+  /// 1. The [referenceBoxSize] may not comply with the constraints, so we may
+  ///    not be able to use it.
+  /// 2. The [referenceBoxSize] is owned by another object that is not an direct
+  ///    child, so using it for layout breaks the contract in the flutter
+  ///    framework that expects every [RenderBox] to be sized only according to
+  ///    it's parents constraints and itself.
+  /// 3. The parent [BoxConstraints] may not be constrained also, so if we used
+  ///    the biggest size allowed by it, we may not have an size.
+  ///
+  /// Therefore, the only sensible size for this [RenderObject] is
+  /// [BoxConstraints.smallest].
+  Size computeDryLayout(BoxConstraints constraints) => constraints.smallest;
 
   final kRippleStrokeWidth = 2.0;
   final kInnerCircleStrokeWidth = 1.0;
 
   void paintBlurred(Canvas canvas, Matrix4 transform) {
-    final size = this.referenceBoxSize;
+    final refSize = referenceBoxSize;
     final center = _position;
     canvas.save();
 
     canvas.transform(transform.storage);
     _RipplePainter.paintRipples(
       canvas,
-      size,
+      refSize,
       center: center,
       shape: shape,
       ripples: _ripples,
@@ -679,7 +685,7 @@ class _MaterialYouSplashRenderObject extends RenderBox {
     );
     _RipplePainter.paintInnerCircle(
       canvas,
-      size,
+      refSize,
       color: innerColor,
       strokeWidth: kInnerCircleStrokeWidth,
       radius: radius,
@@ -705,7 +711,7 @@ class _MaterialYouSplashRenderObject extends RenderBox {
     final transform = Matrix4.identity()
       ..translate(offset.dx, offset.dy)
       ..multiply(_transformToReferenceBox);
-    final sigma = _kSigmaForContainer(size);
+    final sigma = _kSigmaForContainer(referenceBoxSize);
     _blurLayer = ImageFilterLayer(
       imageFilter: ui.ImageFilter.blur(
         sigmaX: sigma,
