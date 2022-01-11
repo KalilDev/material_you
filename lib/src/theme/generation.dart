@@ -182,7 +182,6 @@ ThemeData _themeFrom(
       ),
       alignment: dialogAlignment,
     ),
-    // TODO
     popupMenuTheme: PopupMenuThemeData(
       color: elevationTheme.level3.overlaidColor(
         scheme.surfaceVariant,
@@ -194,6 +193,9 @@ ThemeData _themeFrom(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24.0),
       ),
+      // Clip because otherwise an highlight leaks on the corners of the
+      // PopupMenu container
+      clipBehavior: Clip.antiAlias,
     ),
     cardTheme: CardTheme(
       color: elevationTheme.level0.overlaidColor(
