@@ -56,8 +56,10 @@ class _MaterialYouInkSplashFactory extends InteractiveInkFeatureFactory {
     double? radius,
     VoidCallback? onRemoved,
   }) {
-    if (kIsWeb) {
-      // Fallback because blur is not implemented on web
+    /// Fallback because the blur used on [MaterialYouInkSplash] is not
+    /// implemented on web.
+    const shouldFallback = kIsWeb;
+    if (shouldFallback || !containedInkWell) {
       return InkSplash.splashFactory.create(
         controller: controller,
         referenceBox: referenceBox,
