@@ -1,0 +1,148 @@
+diff --git a/packages/flutter/lib/src/material/popup_menu.dart b/packages/flutter/lib/src/material/popup_menu.dart
+index ca6f64cfb8..6ff5c6a80b 100644
+--- a/packages/flutter/lib/src/material/popup_menu.dart
++++ b/packages/flutter/lib/src/material/popup_menu.dart
+@@ -603,6 +603,7 @@ class _PopupMenu<T> extends StatelessWidget {
+             color: route.color ?? popupMenuTheme.color,
+             type: MaterialType.card,
+             elevation: route.elevation ?? popupMenuTheme.elevation ?? 8.0,
++            clipBehavior: route.clipBehavior ?? popupMenuTheme.clipBehavior ?? Clip.none,
+             child: Align(
+               alignment: AlignmentDirectional.topEnd,
+               widthFactor: width.evaluate(route.animation!),
+@@ -735,6 +736,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
+     this.shape,
+     this.color,
+     required this.capturedThemes,
++    this.clipBehavior,
+   }) : itemSizes = List<Size?>.filled(items.length, null);
+ 
+   final RelativeRect position;
+@@ -746,6 +748,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
+   final ShapeBorder? shape;
+   final Color? color;
+   final CapturedThemes capturedThemes;
++  final Clip? clipBehavior;
+ 
+   @override
+   Animation<double> createAnimation() {
+@@ -870,6 +873,7 @@ Future<T?> showMenu<T>({
+   ShapeBorder? shape,
+   Color? color,
+   bool useRootNavigator = false,
++  Clip? clipBehavior,
+ }) {
+   assert(context != null);
+   assert(position != null);
+@@ -899,6 +903,7 @@ Future<T?> showMenu<T>({
+     shape: shape,
+     color: color,
+     capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
++    clipBehavior: clipBehavior,
+   ));
+ }
+ 
+@@ -993,6 +998,7 @@ class PopupMenuButton<T> extends StatefulWidget {
+     this.shape,
+     this.color,
+     this.enableFeedback,
++    this.clipBehavior,
+   }) : assert(itemBuilder != null),
+        assert(offset != null),
+        assert(enabled != null),
+@@ -1088,6 +1094,13 @@ class PopupMenuButton<T> extends StatefulWidget {
+   ///
+   ///  * [Feedback] for providing platform-specific feedback to certain actions.
+   final bool? enableFeedback;
++  
++  /// If provided, the clip behavior used for the menu.
++  ///
++  /// If this property is null, then [PopupMenuThemeData.clipBehavior] is used.
++  /// If [PopupMenuThemeData.clipBehavior] is also null, then
++  /// [Clip.none] is used.
++  final Clip? clipBehavior;
+ 
+   /// If provided, the size of the [Icon].
+   ///
+@@ -1133,6 +1146,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
+         position: position,
+         shape: widget.shape ?? popupMenuTheme.shape,
+         color: widget.color ?? popupMenuTheme.color,
++        clipBehavior: widget.clipBehavior ?? popupMenuTheme.clipBehavior,
+       )
+       .then<void>((T? newValue) {
+         if (!mounted)
+diff --git a/packages/flutter/lib/src/material/popup_menu_theme.dart b/packages/flutter/lib/src/material/popup_menu_theme.dart
+index a05ddd8509..b726f665ed 100644
+--- a/packages/flutter/lib/src/material/popup_menu_theme.dart
++++ b/packages/flutter/lib/src/material/popup_menu_theme.dart
+@@ -38,6 +38,7 @@ class PopupMenuThemeData with Diagnosticable {
+     this.elevation,
+     this.textStyle,
+     this.enableFeedback,
++    this.clipBehavior,
+   });
+ 
+   /// The background color of the popup menu.
+@@ -57,6 +58,11 @@ class PopupMenuThemeData with Diagnosticable {
+   /// If [PopupMenuButton.enableFeedback] is provided, [enableFeedback] is ignored.
+   final bool? enableFeedback;
+ 
++  /// The clip behavior for the [Material] encompassing the popup menu.
++  ///
++  /// Defaults to [Clip.none] if null.
++  final Clip? clipBehavior;
++
+   /// Creates a copy of this object with the given fields replaced with the
+   /// new values.
+   PopupMenuThemeData copyWith({
+@@ -65,6 +71,7 @@ class PopupMenuThemeData with Diagnosticable {
+     double? elevation,
+     TextStyle? textStyle,
+     bool? enableFeedback,
++    Clip? clipBehavior,
+   }) {
+     return PopupMenuThemeData(
+       color: color ?? this.color,
+@@ -72,6 +79,7 @@ class PopupMenuThemeData with Diagnosticable {
+       elevation: elevation ?? this.elevation,
+       textStyle: textStyle ?? this.textStyle,
+       enableFeedback: enableFeedback ?? this.enableFeedback,
++      clipBehavior: clipBehavior ?? this.clipBehavior,
+     );
+   }
+ 
+@@ -90,6 +98,7 @@ class PopupMenuThemeData with Diagnosticable {
+       elevation: lerpDouble(a?.elevation, b?.elevation, t),
+       textStyle: TextStyle.lerp(a?.textStyle, b?.textStyle, t),
+       enableFeedback: t < 0.5 ? a?.enableFeedback : b?.enableFeedback,
++      clipBehavior: t < 0.5 ? a?.clipBehavior : b?.clipBehavior,
+     );
+   }
+ 
+@@ -101,6 +110,7 @@ class PopupMenuThemeData with Diagnosticable {
+       elevation,
+       textStyle,
+       enableFeedback,
++      clipBehavior,
+     );
+   }
+ 
+@@ -115,7 +125,8 @@ class PopupMenuThemeData with Diagnosticable {
+         && other.color == color
+         && other.shape == shape
+         && other.textStyle == textStyle
+-        && other.enableFeedback == enableFeedback;
++        && other.enableFeedback == enableFeedback
++        && other.clipBehavior == clipBehavior;
+   }
+ 
+   @override
+@@ -126,6 +137,7 @@ class PopupMenuThemeData with Diagnosticable {
+     properties.add(DoubleProperty('elevation', elevation, defaultValue: null));
+     properties.add(DiagnosticsProperty<TextStyle>('text style', textStyle, defaultValue: null));
+     properties.add(DiagnosticsProperty<bool>('enableFeedback', enableFeedback, defaultValue: null));
++    properties.add(DiagnosticsProperty<Clip>('clipBehavior', clipBehavior, defaultValue: null));
+   }
+ }
+ 
