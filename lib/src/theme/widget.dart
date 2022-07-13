@@ -222,7 +222,7 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
         MediaQuery.maybeOf(context) ??
         MediaQueryData.fromWindow(ui.window);
     final targetPlatform = widget.targetPlatform ?? defaultTargetPlatform;
-    final palette = context.palette;
+    final palette = widget.usePlatformPalette ? context.palette : null;
     final elevationTheme = widget.elevationTheme ?? MD3ElevationTheme.baseline;
     final stateLayerOpacity =
         widget.stateLayerOpacityTheme ?? MD3StateLayerOpacityTheme.baseline;
@@ -258,10 +258,10 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
     }
 
     final willUseFallback = widget.monetThemeForFallbackPalette != null &&
-            widget.seed == null &&
-            palette.source != PaletteSource.platform ||
-        !widget.usePlatformPalette;
-    final seed = widget.seed ?? palette.primaryColor;
+        widget.seed == null &&
+        palette?.source != PaletteSource.platform;
+    final seed = widget.seed ??
+        (widget.usePlatformPalette ? palette!.primaryColor : null);
     final textScaleFactor = mediaQuery.textScaleFactor;
 
     final identity = _ThemesIdentity(
@@ -290,7 +290,7 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
     final themes = _cache.putIfAbsent(
       identity,
       () => themesFromPlatform(
-        PlatformPalette.fallback(primaryColor: seed),
+        seed == null ? null : PlatformPalette.fallback(primaryColor: seed),
         monetThemeForFallbackPalette:
             willUseFallback ? widget.monetThemeForFallbackPalette : null,
         textTheme: resolvedTextTheme,

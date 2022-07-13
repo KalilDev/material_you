@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:material_you/src/theme.dart';
 import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
 
 import '../material_you_splash.dart';
@@ -20,7 +21,7 @@ Themes themesFrom(
     themesFromPlatform(palette);
 
 Themes themesFromPlatform(
-  PlatformPalette palette, {
+  PlatformPalette? palette, {
   MonetTheme? monetThemeForFallbackPalette,
   MD3ElevationTheme? elevationTheme,
   MD3TextTheme? textTheme,
@@ -31,10 +32,10 @@ Themes themesFromPlatform(
   elevationTheme ??= MD3ElevationTheme.baseline;
   stateLayerOpacityTheme ??= MD3StateLayerOpacityTheme.baseline;
   MonetTheme monet;
-  if (palette.source != PaletteSource.platform) {
-    monet = monetThemeForFallbackPalette ?? monetThemeFromPalette(palette);
+  if (palette?.source != PaletteSource.platform) {
+    monet = monetThemeForFallbackPalette ?? monetThemeFromPalette(palette!);
   } else {
-    monet = monetThemeFromPalette(palette);
+    monet = monetThemeFromPalette(palette!);
   }
   textTheme ??= generateTextTheme().resolveTo(deviceType);
 
@@ -118,6 +119,7 @@ ThemeData _themeFrom(
     colorScheme: scheme.toColorScheme(),
     textTheme: textTheme.toTextTheme(),
   ).copyWith(
+    useMaterial3: true,
     appBarTheme: AppBarTheme(
       // level0: fixed
       // level2: onScroll
@@ -156,8 +158,26 @@ ThemeData _themeFrom(
         scheme.surface,
         MD3ElevationLevel.surfaceTint(scheme),
       ),
+      iconTheme: MaterialStateProperty.resolveWith((states) {
+        if (states.contains(MaterialState.selected)) {
+          return IconThemeData(
+            color: scheme.onSecondaryContainer,
+            opacity: 1,
+          );
+        }
+        return IconThemeData(
+          color: scheme.onSurfaceVariant,
+          opacity: 1,
+        );
+      }),
       indicatorColor: scheme.secondaryContainer,
-      labelTextStyle: MaterialStateProperty.all(textTheme.labelMedium),
+      labelTextStyle: MaterialStateProperty.resolveWith((states) {
+        final style = textTheme.labelMedium;
+        if (states.contains(MaterialState.selected)) {
+          return style.copyWith(color: scheme.onSurface);
+        }
+        return style.copyWith(color: scheme.onSurfaceVariant);
+      }),
     ),
     bottomAppBarTheme: BottomAppBarTheme(
       color: elevationTheme.level0.overlaidColor(
@@ -207,7 +227,6 @@ ThemeData _themeFrom(
       ),
       margin: const EdgeInsets.all(4.0),
     ),
-
     pageTransitionsTheme: const PageTransitionsTheme(builders: {
       TargetPlatform.linux: ZoomPageTransitionsBuilder(),
       TargetPlatform.windows: ZoomPageTransitionsBuilder(),
@@ -236,8 +255,21 @@ ThemeData _themeFrom(
       color: scheme.outline,
     ),
     checkboxTheme: _checkboxThemeFor(scheme, stateLayerOpacityTheme),
+    // TODO:
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: scheme.primary,
+    ),
+    tabBarTheme: TabBarTheme(
+      labelColor: scheme.onSurface,
+      unselectedLabelColor: scheme.onSurfaceVariant,
+      labelStyle: textTheme.titleSmall,
+      unselectedLabelStyle: textTheme.titleSmall,
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(
+          width: 2,
+          color: scheme.primary,
+        ),
+      ),
     ),
     navigationRailTheme: NavigationRailThemeData(
       backgroundColor: elevationTheme.level0.overlaidColor(
@@ -266,16 +298,31 @@ ThemeData _themeFrom(
         scheme.surfaceVariant,
         MD3ElevationLevel.surfaceTint(scheme),
       ),
-      dialTextColor: scheme.onSurfaceVariant,
+      dialTextColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? scheme.onSurface
+              : scheme.onPrimary),
       backgroundColor: elevationTheme.level3.overlaidColor(
         scheme.surface,
         MD3ElevationLevel.surfaceTint(scheme),
       ),
       entryModeIconColor: scheme.onSurface,
-      hourMinuteColor: scheme.primaryContainer,
-      hourMinuteTextColor: scheme.onPrimaryContainer,
-      dayPeriodColor: scheme.tertiary,
-      dayPeriodTextColor: scheme.onTertiary,
+      hourMinuteColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? scheme.primaryContainer
+              : scheme.surfaceVariant),
+      hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? scheme.onPrimaryContainer
+              : scheme.onSurface),
+      dayPeriodColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? scheme.tertiary
+              : scheme.surfaceVariant),
+      dayPeriodTextColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? scheme.onTertiary
+              : scheme.onSurface),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24.0),
       ),
