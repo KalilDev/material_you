@@ -62,15 +62,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeMode = ThemeMode.system;
     return RainbowSeedBuilder(
-      builder: (context, seed) => MD3Themes(
+      builder: (context, seed) =>
+          MD3ThemedApp<ExampleAppScheme, ExampleAppTheme>(
         seed: seed,
         //monetThemeForFallbackPalette: baseline_3p,
+        appThemeFactory: ExampleAppTheme.harmonized,
         builder: (context, lightTheme, darkTheme) => MaterialApp(
           title: 'Flutter Demo',
           themeMode: themeMode,
           theme: lightTheme,
           darkTheme: darkTheme,
-          builder: (context, home) => AnimatedMonetColorScheme(
+          builder: (context, home) =>
+              AnimatedMonetColorSchemes<ExampleAppScheme, ExampleAppTheme>(
             themeMode: themeMode,
             child: home!,
           ),
@@ -79,6 +82,60 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+extension AppSchemeE on BuildContext {
+  ExampleAppScheme get appScheme =>
+      InheritedAppCustomColorScheme.maybeOf<ExampleAppScheme>(this)!;
+}
+
+class ExampleAppScheme extends AppCustomColorScheme<ExampleAppScheme> {
+  const ExampleAppScheme({
+    required this.red,
+    required this.green,
+  });
+  final CustomColorScheme red;
+  final CustomColorScheme green;
+
+  @override
+  ExampleAppScheme lerpWith(ExampleAppScheme b, double t) => ExampleAppScheme(
+        red: CustomColorScheme.lerp(red, b.red, t),
+        green: CustomColorScheme.lerp(green, b.green, t),
+      );
+}
+
+class ExampleAppTheme
+    extends AppCustomColorTheme<ExampleAppScheme, ExampleAppTheme> {
+  final CustomColorTheme red;
+  final CustomColorTheme green;
+
+  const ExampleAppTheme({
+    required this.red,
+    required this.green,
+  });
+
+  static ExampleAppTheme harmonized(MonetTheme theme) => ExampleAppTheme(
+        red: theme.harmonizedCustomColorTheme(Colors.red),
+        green: theme.harmonizedCustomColorTheme(Colors.green),
+      );
+
+  @override
+  ExampleAppScheme get dark => ExampleAppScheme(
+        red: red.dark,
+        green: green.dark,
+      );
+
+  @override
+  ExampleAppScheme get light => ExampleAppScheme(
+        red: red.light,
+        green: green.light,
+      );
+
+  @override
+  ExampleAppTheme lerpWith(ExampleAppTheme b, double t) => ExampleAppTheme(
+        red: CustomColorTheme.lerp(red, b.red, t),
+        green: CustomColorTheme.lerp(green, b.green, t),
+      );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -256,6 +313,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                 child: SizedBox.expand()),
                           ),
                         ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
+                      height: 86,
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: Container(
+                                  color: context.appScheme.red.colorContainer)),
+                          Expanded(
+                              child: Container(
+                                  color:
+                                      context.appScheme.green.colorContainer)),
+                        ],
                       ),
                     ),
                   ),
