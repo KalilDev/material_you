@@ -225,8 +225,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               height: 86,
                               width: 86,
                               child: Material(
-                                shape: MorphableBorder.toBorder(
-                                    WobblyBorder.triangle()),
+                                shape: WobblyBorder.triangle(),
                                 color: context.colorScheme.primaryContainer,
                                 child: Center(
                                   child: Text(
@@ -299,11 +298,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           aspectRatio: 1,
                           child: Material(
                             animationDuration: Duration(milliseconds: 500),
-                            shape: MorphableBorder.toBorder(border),
+                            shape: border,
                             color: context.colorScheme.primary,
                             child: InkWell(
                                 onTap: () => null,
-                                customBorder: MorphableBorder.toBorder(border),
+                                customBorder: border,
                                 highlightColor: Colors.transparent,
                                 splashColor: Colors.black.withAlpha(40),
                                 child: SizedBox.expand()),

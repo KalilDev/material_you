@@ -2,14 +2,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'morphable_path.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math_64.dart' as vec;
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-
-import 'morphable_path.dart';
-import 'morphable_shape.dart';
 
 /// A border that fits a circle within the available space.
 ///
@@ -24,7 +20,7 @@ import 'morphable_shape.dart';
 ///  * [BorderSide], which is used to describe each side of the box.
 ///  * [Border], which, when used with [BoxDecoration], can also
 ///    describe a circle.
-class WobblyBorder extends MorphableBorder {
+class WobblyBorder extends OutlinedBorder {
   /// Create a circle border.
   ///
   /// The [side] argument must not be null.
@@ -62,7 +58,7 @@ class WobblyBorder extends MorphableBorder {
   WobblyBorder scale(double t) => WobblyBorder(side: side.scale(t));
 
   @override
-  MorphableBorder? lerpFrom(ShapeBorder? a, double t) {
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) {
     if (a is WobblyBorder && a.vertices == vertices)
       return WobblyBorder(
         side: BorderSide.lerp(a.side, side, t),
@@ -73,7 +69,7 @@ class WobblyBorder extends MorphableBorder {
   }
 
   @override
-  MorphableBorder? lerpTo(ShapeBorder? b, double t) {
+  ShapeBorder? lerpTo(ShapeBorder? b, double t) {
     if (b is WobblyBorder && b.vertices == vertices)
       return WobblyBorder(
         side: BorderSide.lerp(side, b.side, t),
@@ -91,8 +87,7 @@ class WobblyBorder extends MorphableBorder {
       );
 
   @override
-  MorphablePath getInnerPath(Rect rect, {TextDirection? textDirection}) =>
-      _pathForRect(
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => _pathForRect(
         _reducedRect(rect, side.width / 2),
         textDirection: textDirection,
       );
@@ -101,7 +96,7 @@ class WobblyBorder extends MorphableBorder {
   int get _stepCount => vertices * 2;
   Offset _flipAround(Offset point, Offset anchor) => anchor + (anchor - point);
   @override
-  MorphablePath getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
       _pathForRect(rect);
   double get angleFrac => (2 * math.pi) / _stepCount;
   double get angleDistanceToSupport =>
@@ -109,7 +104,7 @@ class WobblyBorder extends MorphableBorder {
   double radiusCompensation(double heightDiff) =>
       heightDiff * ((vertices - 3) * (1 / 5) * 0.15).clamp(0.0, 1.0);
 
-  MorphablePath _pathForRect(Rect rect, {TextDirection? textDirection}) {
+  Path _pathForRect(Rect rect, {TextDirection? textDirection}) {
     final radius =
         (rect.shortestSide / 2.0) + radiusCompensation(_heightDiffFor(rect));
     final innerRadius = radius - _heightDiffFor(rect),
@@ -126,7 +121,7 @@ class WobblyBorder extends MorphableBorder {
           math.sin(theta) * radius + cx,
           math.cos(theta) * radius + cy,
         );
-    final path = MorphablePath()..moveTo(lastPoint.dx, lastPoint.dy);
+    final path = Path()..moveTo(lastPoint.dx, lastPoint.dy);
 
     void cubic(Offset c1, Offset c2, Offset target) {
       path.cubicTo(
@@ -225,7 +220,7 @@ extension on Radius {
   Radius scale(double t) => Radius.elliptical(t * x, t * y);
 }
 
-class TearBorder extends MorphableBorder {
+class TearBorder extends OutlinedBorder {
   /// Create a tear border.
   ///
   /// The [side] argument must not be null.
@@ -255,7 +250,7 @@ class TearBorder extends MorphableBorder {
       ];
 
   @override
-  MorphableBorder scale(double t) => TearBorder(
+  OutlinedBorder scale(double t) => TearBorder(
         side: side.scale(t),
         topLeft: topLeft?.scale(t),
         topRight: topRight?.scale(t),
@@ -264,18 +259,17 @@ class TearBorder extends MorphableBorder {
       );
 
   @override
-  MorphablePath getInnerPath(Rect rect, {TextDirection? textDirection}) =>
-      _getPath(
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => _getPath(
         rect,
         textDirection: textDirection,
         borderWidth: side.width,
       );
 
   @override
-  MorphablePath getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
       _getPath(rect, textDirection: textDirection);
 
-  MorphablePath _getPath(Rect rect,
+  Path _getPath(Rect rect,
       {TextDirection? textDirection, double borderWidth = 0.0}) {
     final deg90 = math.pi / 2;
     final radius = (rect.shortestSide / 2.0) - borderWidth / 2;
@@ -283,7 +277,7 @@ class TearBorder extends MorphableBorder {
           math.sin(deg90 * (i + 2)) * radius + rect.center.dx,
           math.cos(deg90 * (i + 2)) * radius + rect.center.dy,
         );
-    final path = MorphablePath()..moveTo(pointAt(0).dx, pointAt(0).dy);
+    final path = Path()..moveTo(pointAt(0).dx, pointAt(0).dy);
     bool drawCircular(int i) {
       final curve = radii[i];
       final nextPoint = pointAt(i + 1);
@@ -395,7 +389,7 @@ class TearBorder extends MorphableBorder {
   }
 }
 
-class RoundedTriangleBorder extends MorphableBorder {
+class RoundedTriangleBorder extends OutlinedBorder {
   /// Create a circle border.
   ///
   /// The [side] argument must not be null.
@@ -410,17 +404,16 @@ class RoundedTriangleBorder extends MorphableBorder {
   }
 
   @override
-  MorphableBorder scale(double t) => RoundedTriangleBorder(side: side.scale(t));
+  OutlinedBorder scale(double t) => RoundedTriangleBorder(side: side.scale(t));
 
   @override
-  MorphablePath getInnerPath(Rect rect, {TextDirection? textDirection}) =>
-      _getPath(
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => _getPath(
         rect,
         textDirection: textDirection,
         borderWidth: side.width,
       );
 
-  MorphablePath _getPath(Rect rect,
+  Path _getPath(Rect rect,
       {TextDirection? textDirection, double borderWidth = 0.0}) {
     rect = Rect.fromLTRB(
       rect.left + borderWidth,
@@ -430,7 +423,7 @@ class RoundedTriangleBorder extends MorphableBorder {
     );
     final width = rect.width, height = rect.height;
     final sx = rect.topLeft.dx, sy = rect.topLeft.dy;
-    final path = MorphablePath()
+    final path = Path()
       ..moveTo(
           0.2622083333333333 * width + sx, 0.15379166666666666 * height + sy)
       ..cubicTo(
@@ -488,8 +481,7 @@ class RoundedTriangleBorder extends MorphableBorder {
   }
 
   @override
-  MorphablePath getOuterPath(Rect rect, {TextDirection? textDirection}) =>
-      _getPath(
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => _getPath(
         rect,
         textDirection: textDirection,
       );
@@ -525,7 +517,7 @@ class RoundedTriangleBorder extends MorphableBorder {
   }
 }
 
-class PillBorder extends MorphableBorder {
+class PillBorder extends OutlinedBorder {
   /// Create a pill border.
   ///
   /// The [side] argument must not be null.
@@ -561,14 +553,14 @@ class PillBorder extends MorphableBorder {
   }
 
   @override
-  MorphableBorder scale(double t) => PillBorder(
+  OutlinedBorder scale(double t) => PillBorder(
         side: side.scale(t),
         right: right,
         radiusFrac: radiusFrac,
       );
 
   @override
-  MorphableBorder? lerpFrom(ShapeBorder? a, double t) {
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) {
     if (a is PillBorder)
       return PillBorder(
         side: BorderSide.lerp(a.side, side, t),
@@ -579,7 +571,7 @@ class PillBorder extends MorphableBorder {
   }
 
   @override
-  MorphableBorder? lerpTo(ShapeBorder? b, double t) {
+  ShapeBorder? lerpTo(ShapeBorder? b, double t) {
     if (b is PillBorder)
       return PillBorder(
         side: BorderSide.lerp(side, b.side, t),
@@ -590,13 +582,13 @@ class PillBorder extends MorphableBorder {
   }
 
   @override
-  MorphablePath getInnerPath(Rect rect, {TextDirection? textDirection}) =>
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
       _getPath(rect, textDirection: textDirection, borderWidth: side.width);
 
   @override
-  MorphablePath getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
       _getPath(rect, textDirection: textDirection);
-  MorphablePath _getPath(Rect rect,
+  Path _getPath(Rect rect,
       {TextDirection? textDirection, double borderWidth = 0.0}) {
     final radius = this.radius(rect.height - 2 * borderWidth);
     final cx = rect.center.dx, cy = rect.center.dy;
@@ -609,7 +601,7 @@ class PillBorder extends MorphableBorder {
         c2 = Offset(cx + (dx * sideCoeff), cy - dy);
 
     final rx = sqrt2 * radius / 2, ry = sideCoeff * sqrt2 * radius / 2;
-    final path = MorphablePath()
+    final path = Path()
       ..moveTo(c1.dx - rx, c1.dy - ry)
       ..lineTo(c2.dx - rx, c2.dy - ry)
       ..arcToPoint(
@@ -668,7 +660,7 @@ class PillBorder extends MorphableBorder {
   }
 }
 
-class DiamondBorder extends MorphableBorder {
+class DiamondBorder extends OutlinedBorder {
   /// Create a pill border.
   ///
   /// The [side] argument must not be null.
@@ -699,7 +691,7 @@ class DiamondBorder extends MorphableBorder {
   }
 
   @override
-  MorphableBorder scale(double t) => DiamondBorder.only(
+  OutlinedBorder scale(double t) => DiamondBorder.only(
         side: side.scale(t),
         top: top.scale(t),
         left: left.scale(t),
@@ -708,7 +700,7 @@ class DiamondBorder extends MorphableBorder {
       );
 
   @override
-  MorphableBorder? lerpFrom(ShapeBorder? a, double t) {
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) {
     if (a is DiamondBorder)
       return DiamondBorder.only(
         side: BorderSide.lerp(a.side, side, t),
@@ -721,7 +713,7 @@ class DiamondBorder extends MorphableBorder {
   }
 
   @override
-  MorphableBorder? safeLerpTo(ShapeBorder? b, double t) {
+  ShapeBorder? safeLerpTo(ShapeBorder? b, double t) {
     if (b is DiamondBorder)
       return DiamondBorder.only(
         side: BorderSide.lerp(side, side, t),
@@ -734,13 +726,13 @@ class DiamondBorder extends MorphableBorder {
   }
 
   @override
-  MorphablePath getInnerPath(Rect rect, {TextDirection? textDirection}) =>
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
       _getPath(rect, textDirection: textDirection, borderWidth: side.width);
 
   @override
-  MorphablePath getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
       _getPath(rect, textDirection: textDirection);
-  MorphablePath _getPath(Rect rect,
+  Path _getPath(Rect rect,
       {TextDirection? textDirection, double borderWidth = 0.0}) {
     final transform = Matrix4.identity()
       ..translate(rect.topCenter.dx, rect.topCenter.dy)
@@ -752,7 +744,7 @@ class DiamondBorder extends MorphableBorder {
       bottomLeft: left,
       bottomRight: bottom,
     ).toRRect(rect);
-    return (MorphablePath()..addRRect(rrect)).transform(transform.storage);
+    return (Path()..addRRect(rrect)).transform(transform.storage);
   }
 
   @override
