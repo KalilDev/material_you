@@ -7,7 +7,6 @@ import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:monet_theme/monet_theme.dart';
 
-import '../material_you_splash.dart';
 import 'button.dart';
 import 'model.dart';
 
@@ -169,7 +168,7 @@ ThemeData _themeFrom(
         MD3ElevationLevel.surfaceTint(scheme),
       ),
     ),
-    splashFactory: MaterialYouInkSplash.splashFactory,
+    splashFactory: InkRipple.splashFactory,
     highlightColor: Colors.transparent,
     scaffoldBackgroundColor: scheme.background,
     splashColor: Colors.black.withAlpha(40),
@@ -240,9 +239,6 @@ ThemeData _themeFrom(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24.0),
       ),
-      // Clip because otherwise an highlight leaks on the corners of the
-      // PopupMenu container
-      clipBehavior: Clip.antiAlias,
     ),
     cardTheme: CardTheme(
       color: elevationTheme.level0.overlaidColor(

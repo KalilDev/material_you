@@ -13,6 +13,7 @@ dependencies:
   vector_math: any
   tuple: ">=1.0.0 <3.0.0"
   dynamic_color_compat: ^0.0.1
+  palette_from_wallpaper: ^0.1.5
   flutter_monet_theme: ^0.4.1
   monet_theme: ^0.4.1
 

@@ -117,7 +117,7 @@ packages:
     source: hosted
     version: "0.4.1"
   palette_from_wallpaper:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: palette_from_wallpaper
       url: "http://localhost:4000"

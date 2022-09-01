@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../material_you_splash.dart';
 import 'inherited.dart';
 import 'material_state.dart';
 import 'model.dart';
@@ -81,7 +80,7 @@ abstract class MD3ElevatedButton {
         disabledColor: scheme.onSurface,
         backgroundColor: scheme.surface,
         foregroundColor: scheme.primary,
-        splashFactory: MaterialYouInkSplash.splashFactory,
+        splashFactory: InkRipple.splashFactory,
         md3Elevation: MD3MaterialStateElevation(
           elevationTheme.level1,
           elevationTheme.level2,
@@ -177,7 +176,7 @@ abstract class MD3OutlinedButton {
         disabledColor: scheme.onSurface,
         foregroundColor: scheme.primary,
         outlineColor: scheme.outline,
-        splashFactory: MaterialYouInkSplash.splashFactory,
+        splashFactory: InkRipple.splashFactory,
       ).copyWith(
         padding: MaterialStateProperty.all(
           ButtonStyleButton.scaledPadding(
@@ -261,7 +260,7 @@ abstract class MD3TextButton {
         shape: const StadiumBorder(),
         disabledColor: scheme.onSurface,
         foregroundColor: scheme.primary,
-        splashFactory: MaterialYouInkSplash.splashFactory,
+        splashFactory: InkRipple.splashFactory,
       ).copyWith(
         padding: MaterialStateProperty.all(
           ButtonStyleButton.scaledPadding(
