@@ -3,7 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
-
+import 'package:material_color_utilities/material_color_utilities.dart';
+import 'package:dynamic_color_compat/dynamic_color_compat.dart';
 import '../single_cache.dart';
 import 'animated.dart';
 import 'generation.dart';
@@ -55,45 +56,71 @@ class _TextThemeIdentity {
   }
 }
 
+class _PlatformPaletteThemesIdentity {
+  // Used by the monet themes
+  // When the platform returned an fallback and the user provided an fallback
+  // palette, this is null. Otherwise it is the seed.
+  final Color? seedOrNull;
+
+  // When the platform returned an fallback and the user provided an fallback
+  // palette, this is not null. Otherwise it is null.
+  // Will be checked by identity.
+  final MonetTheme? fallbackThemeOrNull;
+
+  const _PlatformPaletteThemesIdentity({
+    required this.seedOrNull,
+    required this.fallbackThemeOrNull,
+  });
+  @override
+  int get hashCode => Object.hashAll([
+        seedOrNull,
+        identityHashCode(fallbackThemeOrNull),
+      ]);
+
+  @override
+  bool operator ==(other) {
+    if (identical(other, this)) {
+      return true;
+    }
+    if (other is! _PlatformPaletteThemesIdentity) {
+      return false;
+    }
+    return other.seedOrNull == seedOrNull &&
+        identical(other.fallbackThemeOrNull, fallbackThemeOrNull);
+  }
+}
+
 // An opaque object which, when == to another themesIdentity, determines if
 // the monet themes are equal. This is an temporary workaround while they
 // don't override the equality operator.
 @immutable
 class _ThemesIdentity {
-  // Used by the monet themes
-  // When the platform returned an fallback and the user provided an fallback
-  // palette, this is null. Otherwise it is the seed.
-  final Color? seedOrNull;
   // Used by text themes and for the dialog positioning
   final MD3DeviceType deviceType;
   // Used by button and the text themes.
   final double textScaleFactor;
-  // When the platform returned an fallback and the user provided an fallback
-  // palette, this is not null. Otherwise it is null.
-  // Will be checked by identity.
-  final MonetTheme? fallbackThemeOrNull;
   // Will be checked by identity.
   final MD3ElevationTheme? userElevationThemeOrNull;
   // Will be checked by identity.
   final MD3TextAdaptativeTheme? userTextThemeOrNull;
+  // Either a [CorePalette] or an [_PlatformPaletteThemesIdentity]
+  final Object themeIdentity;
 
   const _ThemesIdentity({
-    required this.seedOrNull,
     required this.deviceType,
     required this.textScaleFactor,
-    required this.fallbackThemeOrNull,
     required this.userElevationThemeOrNull,
     required this.userTextThemeOrNull,
+    required this.themeIdentity,
   });
 
   @override
   int get hashCode => Object.hashAll([
-        seedOrNull,
         deviceType,
         textScaleFactor,
-        identityHashCode(fallbackThemeOrNull),
         identityHashCode(userElevationThemeOrNull),
         identityHashCode(userTextThemeOrNull),
+        themeIdentity
       ]);
 
   @override
@@ -104,12 +131,11 @@ class _ThemesIdentity {
     if (other is! _ThemesIdentity) {
       return false;
     }
-    return other.seedOrNull == seedOrNull &&
-        other.deviceType == deviceType &&
+    return other.deviceType == deviceType &&
         textScaleFactor == other.textScaleFactor &&
-        identical(other.fallbackThemeOrNull, fallbackThemeOrNull) &&
         identical(other.userElevationThemeOrNull, userElevationThemeOrNull) &&
-        identical(other.userTextThemeOrNull, userTextThemeOrNull);
+        identical(other.userTextThemeOrNull, userTextThemeOrNull) &&
+        other.themeIdentity == themeIdentity;
   }
 }
 
@@ -121,21 +147,32 @@ class MD3ThemedApp<S extends AppCustomColorScheme<S>,
     Key? key,
     this.mediaQueryData,
     this.targetPlatform,
-    this.seed,
-    this.monetThemeForFallbackPalette,
+    @Deprecated("use useDynamicColor and corePalette") this.seed,
+    @Deprecated("use useDynamicColor and corePalette")
+        this.monetThemeForFallbackPalette,
     this.textTheme,
     this.elevationTheme,
     this.stateLayerOpacityTheme,
     this.appThemeFactory,
     this.animated = true,
-    this.usePlatformPalette = true,
+    @Deprecated("use useDynamicColor and corePalette")
+        this.usePlatformPalette = true,
+    this.useDynamicColor = true,
+    this.corePalette,
     required this.builder,
-  })  : assert(seed == null || monetThemeForFallbackPalette == null),
-        assert(usePlatformPalette || monetThemeForFallbackPalette != null),
+  })  : assert(seed == null ||
+            monetThemeForFallbackPalette == null ||
+            corePalette != null ||
+            useDynamicColor),
+        assert(usePlatformPalette ||
+            monetThemeForFallbackPalette != null ||
+            useDynamicColor),
         super(key: key);
   final MediaQueryData? mediaQueryData;
   final TargetPlatform? targetPlatform;
+  @Deprecated("use useDynamicColor and corePalette")
   final Color? seed;
+  @Deprecated("use useDynamicColor and corePalette")
   final MonetTheme? monetThemeForFallbackPalette;
   final MD3TextAdaptativeTheme? textTheme;
   final MD3ElevationTheme? elevationTheme;
@@ -143,7 +180,10 @@ class MD3ThemedApp<S extends AppCustomColorScheme<S>,
   final T Function(MonetTheme)? appThemeFactory;
   final bool animated;
   final MD3ThemedBuilder builder;
+  @Deprecated("use useDynamicColor and corePalette")
   final bool usePlatformPalette;
+  final bool useDynamicColor;
+  final CorePalette? corePalette;
 
   static const _kDesktopPlatforms = {
     TargetPlatform.windows,
@@ -195,12 +235,12 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -222,7 +262,14 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
         MediaQuery.maybeOf(context) ??
         MediaQueryData.fromWindow(ui.window);
     final targetPlatform = widget.targetPlatform ?? defaultTargetPlatform;
-    final palette = widget.usePlatformPalette ? context.palette : null;
+    final willUseDynamicColor = widget.useDynamicColor &&
+            context.dependOnInheritedWidgetOfExactType<
+                    InheritedDynamicColor>() !=
+                null ||
+        widget.corePalette != null;
+    final palette = !willUseDynamicColor && widget.usePlatformPalette
+        ? context.palette
+        : null;
     final elevationTheme = widget.elevationTheme ?? MD3ElevationTheme.baseline;
     final stateLayerOpacity =
         widget.stateLayerOpacityTheme ?? MD3StateLayerOpacityTheme.baseline;
@@ -257,21 +304,38 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
       windowSizeClass = MD3WindowSizeClass.expanded;
     }
 
-    final willUseFallback = widget.monetThemeForFallbackPalette != null &&
-        widget.seed == null &&
-        palette?.source != PaletteSource.platform;
-    final seed = widget.seed ??
-        (widget.usePlatformPalette ? palette!.primaryColor : null);
+    final willUseFallbackOnPlatformPalette =
+        widget.monetThemeForFallbackPalette != null &&
+            widget.seed == null &&
+            palette?.source != PaletteSource.platform;
+    final seedForPlatformPalette = widget.seed ??
+        (widget.usePlatformPalette && !willUseDynamicColor
+            ? palette!.primaryColor
+            : null);
+    final Object themeIdentity;
+    if (willUseDynamicColor) {
+      themeIdentity = widget.corePalette != null
+          ? widget.corePalette!
+          : context.dynamicColor;
+    } else {
+      final seed = widget.seed ??
+          (widget.usePlatformPalette ? palette!.primaryColor : null);
+      themeIdentity = _PlatformPaletteThemesIdentity(
+        seedOrNull: willUseFallbackOnPlatformPalette ? null : seed,
+        fallbackThemeOrNull: willUseFallbackOnPlatformPalette
+            ? widget.monetThemeForFallbackPalette
+            : null,
+      );
+    }
+
     final textScaleFactor = mediaQuery.textScaleFactor;
 
     final identity = _ThemesIdentity(
-      seedOrNull: willUseFallback ? null : seed,
       deviceType: deviceType,
       textScaleFactor: textScaleFactor,
-      fallbackThemeOrNull:
-          willUseFallback ? widget.monetThemeForFallbackPalette : null,
       userElevationThemeOrNull: widget.elevationTheme,
       userTextThemeOrNull: widget.textTheme,
+      themeIdentity: themeIdentity,
     );
 
     final textThemeIdentity = _TextThemeIdentity(
@@ -289,15 +353,29 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
     // Cache the themes generated from the seed values
     final themes = _cache.putIfAbsent(
       identity,
-      () => themesFromPlatform(
-        seed == null ? null : PlatformPalette.fallback(primaryColor: seed),
-        monetThemeForFallbackPalette:
-            willUseFallback ? widget.monetThemeForFallbackPalette : null,
-        textTheme: resolvedTextTheme,
-        elevationTheme: elevationTheme,
-        textScaleFactor: textScaleFactor,
-        stateLayerOpacityTheme: stateLayerOpacity,
-      ),
+      () {
+        if (willUseDynamicColor) {
+          return themesFromCorePalette(
+            widget.corePalette ?? context.dynamicColor,
+            textTheme: resolvedTextTheme,
+            elevationTheme: elevationTheme,
+            textScaleFactor: textScaleFactor,
+            stateLayerOpacityTheme: stateLayerOpacity,
+          );
+        }
+        return themesFromPlatform(
+          seedForPlatformPalette == null
+              ? null
+              : PlatformPalette.fallback(primaryColor: seedForPlatformPalette),
+          monetThemeForFallbackPalette: willUseFallbackOnPlatformPalette
+              ? widget.monetThemeForFallbackPalette
+              : null,
+          textTheme: resolvedTextTheme,
+          elevationTheme: elevationTheme,
+          textScaleFactor: textScaleFactor,
+          stateLayerOpacityTheme: stateLayerOpacity,
+        );
+      },
     );
     // Cache the app theme generated from the theme
     final appTheme = _appThemeCache.putIfAbsent(

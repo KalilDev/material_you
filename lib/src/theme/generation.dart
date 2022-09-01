@@ -2,11 +2,18 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:material_you/src/theme.dart';
+import 'package:dynamic_color_compat/dynamic_color_compat.dart';
 import 'package:palette_from_wallpaper/palette_from_wallpaper.dart';
+import 'package:material_color_utilities/material_color_utilities.dart';
+import 'package:monet_theme/monet_theme.dart';
 
 import '../material_you_splash.dart';
 import 'button.dart';
 import 'model.dart';
+
+MonetTheme monetThemeFromCorePalette(CorePalette palette) {
+  return MonetTheme.fromRaw(generateRawThemeFrom(palette));
+}
 
 MonetTheme monetThemeFromPalette(PlatformPalette palette) {
   return generateTheme(
@@ -14,13 +21,33 @@ MonetTheme monetThemeFromPalette(PlatformPalette palette) {
   );
 }
 
+Themes themesFromCorePalette(
+  CorePalette palette, {
+  MD3ElevationTheme? elevationTheme,
+  MD3TextTheme? textTheme,
+  MD3DeviceType deviceType = MD3DeviceType.mobile,
+  double textScaleFactor = 1,
+  MD3StateLayerOpacityTheme? stateLayerOpacityTheme,
+}) =>
+    themesFromPlatform(
+      const PlatformPalette.fallback(primaryColor: Color(0xDEADBEEF)),
+      monetThemeForFallbackPalette: monetThemeFromCorePalette(palette),
+      elevationTheme: elevationTheme,
+      textTheme: textTheme,
+      deviceType: deviceType,
+      textScaleFactor: textScaleFactor,
+      stateLayerOpacityTheme: stateLayerOpacityTheme,
+    );
+
 @Deprecated('Use themesFromPlatform or themesFromMonet')
 Themes themesFrom(
   PlatformPalette palette,
 ) =>
     themesFromPlatform(palette);
 
-Themes themesFromPlatform(
+const themesFromPlatform = themesFromPlatformPalette;
+
+Themes themesFromPlatformPalette(
   PlatformPalette? palette, {
   MonetTheme? monetThemeForFallbackPalette,
   MD3ElevationTheme? elevationTheme,

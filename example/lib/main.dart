@@ -2,16 +2,15 @@ import 'package:example/color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:material_you/material_you.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
+import 'package:dynamic_color_compat/dynamic_color_compat.dart';
 
 class RainbowSeedBuilder extends StatefulWidget {
   const RainbowSeedBuilder({
     Key? key,
     this.degreesPerSecond = 60,
-    this.chroma = 48,
     required this.builder,
   }) : super(key: key);
   final double degreesPerSecond;
-  final double chroma;
   final Widget Function(BuildContext context, Color) builder;
 
   @override
@@ -34,25 +33,22 @@ class _RainbowSeedBuilderState extends State<RainbowSeedBuilder>
       stream: stream,
       initialData: 0,
       builder: (context, snapshot) {
-        final hct = HctColor.from(
-          degreesPerTick * snapshot.data!,
-          widget.chroma,
-          40,
+        final hsv = HSVColor.fromAHSV(
+          1,
+          (degreesPerTick * snapshot.data!).toInt() % 360,
+          0.5,
+          0.5,
         );
-        final color = Color(hct.toInt());
+        final color = hsv.toColor();
         return widget.builder(context, color);
       },
     );
   }
 }
 
-void main() => runPlatformThemedApp(
+void main() => runDynamicallyThemedApp(
       MyApp(),
-      initialOrFallback: () => PlatformPalette(
-        primaryColor: Color(0xff12295b),
-        secondaryColor: Color(0xff33507c),
-        tertiaryColor: Color(0xff8caaa5),
-      ),
+      fallback: () => baseline3PCorePalette,
     );
 
 class MyApp extends StatelessWidget {
@@ -64,7 +60,7 @@ class MyApp extends StatelessWidget {
     return RainbowSeedBuilder(
       builder: (context, seed) =>
           MD3ThemedApp<ExampleAppScheme, ExampleAppTheme>(
-        seed: seed,
+        //seed: seed,
         //monetThemeForFallbackPalette: baseline_3p,
         appThemeFactory: ExampleAppTheme.harmonized,
         builder: (context, lightTheme, darkTheme) => MaterialApp(

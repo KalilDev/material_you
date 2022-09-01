@@ -36,6 +36,20 @@ packages:
       url: "http://localhost:4000"
     source: hosted
     version: "1.16.0"
+  dynamic_color:
+    dependency: transitive
+    description:
+      name: dynamic_color
+      url: "http://localhost:4000"
+    source: hosted
+    version: "1.5.3"
+  dynamic_color_compat:
+    dependency: "direct main"
+    description:
+      name: dynamic_color_compat
+      url: "http://localhost:4000"
+    source: hosted
+    version: "0.0.1"
   fake_async:
     dependency: transitive
     description:
@@ -103,7 +117,7 @@ packages:
     source: hosted
     version: "0.4.1"
   palette_from_wallpaper:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: palette_from_wallpaper
       url: "http://localhost:4000"
@@ -186,4 +200,4 @@ packages:
     version: "2.1.2"
 sdks:
   dart: ">=2.17.0-0 <3.0.0"
-  flutter: ">=1.20.0"
+  flutter: ">=3.1.0-0.0.pre.1036"
