@@ -56,6 +56,49 @@ class _TextThemeIdentity {
   }
 }
 
+// The operator == on [CorePalette] is broken (https://github.com/material-foundation/material-color-utilities/issues/56)
+// therefore we need to use an identity.
+class _CorePaletteIdentity {
+  final CorePalette corePalette;
+
+  _CorePaletteIdentity(this.corePalette);
+  static int tonalPaletteHash(TonalPalette p) => Object.hashAll(p.asList);
+  static bool tonalPaletteEq(TonalPalette a, TonalPalette b) {
+    final aList = a.asList;
+    final bList = b.asList;
+    for (var i = 0; i < TonalPalette.commonSize; i++) {
+      if (aList[i] != bList[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int get hashCode => Object.hashAll([
+        tonalPaletteHash(corePalette.primary),
+        tonalPaletteHash(corePalette.secondary),
+        tonalPaletteHash(corePalette.tertiary),
+        tonalPaletteHash(corePalette.neutral),
+        tonalPaletteHash(corePalette.neutralVariant),
+        tonalPaletteHash(corePalette.error),
+      ]);
+  bool operator ==(dynamic other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! _CorePaletteIdentity) {
+      return false;
+    }
+    return tonalPaletteEq(corePalette.primary, other.corePalette.primary) &&
+        tonalPaletteEq(corePalette.secondary, other.corePalette.secondary) &&
+        tonalPaletteEq(corePalette.tertiary, other.corePalette.tertiary) &&
+        tonalPaletteEq(corePalette.neutral, other.corePalette.neutral) &&
+        tonalPaletteEq(
+            corePalette.neutralVariant, other.corePalette.neutralVariant) &&
+        tonalPaletteEq(corePalette.error, other.corePalette.error);
+  }
+}
+
 class _PlatformPaletteThemesIdentity {
   // Used by the monet themes
   // When the platform returned an fallback and the user provided an fallback
@@ -314,9 +357,9 @@ class _MD3ThemedAppState<S extends AppCustomColorScheme<S>,
             : null);
     final Object themeIdentity;
     if (willUseDynamicColor) {
-      themeIdentity = widget.corePalette != null
+      themeIdentity = _CorePaletteIdentity(widget.corePalette != null
           ? widget.corePalette!
-          : context.dynamicColor;
+          : context.dynamicColor);
     } else {
       final seed = widget.seed ??
           (widget.usePlatformPalette ? palette!.primaryColor : null);
