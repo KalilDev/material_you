@@ -62,6 +62,7 @@ class MyApp extends StatelessWidget {
           MD3ThemedApp<ExampleAppScheme, ExampleAppTheme>(
         //seed: seed,
         //monetThemeForFallbackPalette: baseline_3p,
+        corePalette: CorePalette.of(seed.value),
         appThemeFactory: ExampleAppTheme.harmonized,
         builder: (context, lightTheme, darkTheme) => MaterialApp(
           title: 'Flutter Demo',

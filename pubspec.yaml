@@ -1,21 +1,22 @@
 name: material_you
 description: An flutter package for implementing the Material You design language
-version: 0.0.31
-homepage:
+version: 0.0.32
+homepage: https://github.com/kalildev/material_you
 
 environment:
   sdk: ">=2.15.0 <3.0.0"
-  flutter: ">=1.17.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  vector_math: any
+  vector_math: ^2.0.0
   tuple: ">=1.0.0 <3.0.0"
-  dynamic_color_compat: ^0.0.1
+  dynamic_color_compat: ^0.0.2
   palette_from_wallpaper: ^0.1.5
-  flutter_monet_theme: ^0.4.1
-  monet_theme: ^0.4.1
+  flutter_monet_theme: ^0.4.3
+  material_color_utilities: ^0.2.0
+  monet_theme: ^0.4.2
 
 dev_dependencies:
   flutter_test:
